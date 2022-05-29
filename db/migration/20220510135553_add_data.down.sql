@@ -1,11 +1,13 @@
 
 SET FOREIGN_KEY_CHECKS = 0;
 
-TRUNCATE TABLE thourus.project_user_relations;
-
 TRUNCATE TABLE thourus.history;
 
 TRUNCATE TABLE thourus.document;
+
+TRUNCATE TABLE thourus.project_user;
+
+TRUNCATE TABLE thourus.space_user;
 
 TRUNCATE TABLE thourus.user;
 

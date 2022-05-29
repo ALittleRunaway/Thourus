@@ -1,9 +1,11 @@
 
-DROP TABLE thourus.project_user_relations;
-
 DROP TABLE thourus.history;
 
 DROP TABLE thourus.document;
+
+DROP TABLE thourus.project_user;
+
+DROP TABLE thourus.space_user;
 
 DROP TABLE thourus.user;
 

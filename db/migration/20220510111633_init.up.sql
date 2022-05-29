@@ -48,10 +48,28 @@ CREATE TABLE thourus.user
     login NVARCHAR(20) NOT NULL,
     password VARCHAR(100) NOT NULL,
     role_id INT NOT NULL,
-    company_id INT NOT NULL,
     registration_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    FOREIGN KEY (role_id) REFERENCES thourus.role (id),
-    FOREIGN KEY (company_id) REFERENCES thourus.company (id)
+    FOREIGN KEY (role_id) REFERENCES thourus.role (id)
+);
+
+CREATE TABLE thourus.space_user
+(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    uid VARCHAR(12) DEFAULT (LEFT(MD5(UUID()),12)) UNIQUE,
+    space_id INT NOT NULL,
+    user_id INT NOT NULL,
+    FOREIGN KEY (space_id) REFERENCES thourus.space (id),
+    FOREIGN KEY (user_id) REFERENCES thourus.user (id)
+);
+
+CREATE TABLE thourus.project_user
+(
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    uid VARCHAR(12) DEFAULT (LEFT(MD5(UUID()),12)) UNIQUE,
+    project_id INT NOT NULL,
+    user_id INT NOT NULL,
+    FOREIGN KEY (project_id) REFERENCES thourus.project (id),
+    FOREIGN KEY (user_id) REFERENCES thourus.user (id)
 );
 
 CREATE TABLE thourus.document
@@ -80,14 +98,4 @@ CREATE TABLE thourus.history
     date_changed DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     FOREIGN KEY (document_id) REFERENCES thourus.document (id),
     FOREIGN KEY (initiator_id) REFERENCES thourus.user (id)
-);
-
-CREATE TABLE thourus.project_user_relations
-(
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    uid VARCHAR(12) DEFAULT (LEFT(MD5(UUID()),12)) UNIQUE,
-    project_id INT NOT NULL,
-    user_id INT NOT NULL,
-    FOREIGN KEY (project_id) REFERENCES thourus.project (id),
-    FOREIGN KEY (user_id) REFERENCES thourus.user (id)
 );
