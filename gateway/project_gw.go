@@ -144,12 +144,12 @@ func (gw *ProjectGateway) CreateProject(ctx context.Context, projectName string,
 	return createdProjectId, nil
 }
 
-func (gw *ProjectGateway) RenameProjectById(ctx context.Context, newProjectName string, spaceId int) error {
+func (gw *ProjectGateway) RenameProjectById(ctx context.Context, newProjectName string, projectId int) error {
 
 	const query = `
-	UPDATE thourus.project p SET p.name = ? WHERE p.id = 1;
+	UPDATE thourus.project p SET p.name = ? WHERE p.id = ?;
 `
-	_, err := gw.db.ExecContext(ctx, query, newProjectName, spaceId)
+	_, err := gw.db.ExecContext(ctx, query, newProjectName, projectId)
 	if err != nil {
 		return err
 	}
@@ -157,12 +157,12 @@ func (gw *ProjectGateway) RenameProjectById(ctx context.Context, newProjectName 
 	return nil
 }
 
-func (gw *ProjectGateway) RenameProjectByUid(ctx context.Context, newProjectName string, spaceUid string) error {
+func (gw *ProjectGateway) RenameProjectByUid(ctx context.Context, newProjectName string, projectUid string) error {
 
 	const query = `
-	UPDATE thourus.project p SET p.name = ? WHERE p.uid = 1;
+	UPDATE thourus.project p SET p.name = ? WHERE p.uid = ?;
 `
-	_, err := gw.db.ExecContext(ctx, query, newProjectName, spaceUid)
+	_, err := gw.db.ExecContext(ctx, query, newProjectName, projectUid)
 	if err != nil {
 		return err
 	}

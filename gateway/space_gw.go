@@ -9,7 +9,6 @@ import (
 type SpaceGw interface {
 	GetSpaceById(ctx context.Context, spaceId int) (entity.Space, error)
 	GetSpaceByUid(ctx context.Context, spaceUid string) (entity.Space, error)
-	GetSpacesInCompany(ctx context.Context, companyId int) ([]entity.Space, error)
 	CreateSpace(ctx context.Context, spaceName string, companyId int) (int, error)
 	RenameSpaceById(ctx context.Context, newSpaceName string, spaceId int) error
 	RenameSpaceByUid(ctx context.Context, newSpaceName string, spaceUid string) error
@@ -80,35 +79,6 @@ func (gw *SpaceGateway) GetSpaceByUid(ctx context.Context, spaceUid string) (ent
 	}
 
 	return space, nil
-}
-
-func (gw *SpaceGateway) GetSpacesInCompany(ctx context.Context, companyId int) ([]entity.Space, error) {
-
-	const query = `
-	SELECT s.id, s.uid, s.name FROM thourus.space s
-	INNER JOIN thourus.company c ON s.company_id = c.id
-	WHERE c.id = ?;
-`
-	spaces := []entity.Space{}
-
-	rows, err := gw.db.QueryContext(ctx, query, companyId)
-
-	for rows.Next() {
-		space := entity.Space{}
-		if err = rows.Scan(
-			&space.Id,
-			&space.Uid,
-			&space.Name,
-			&space.Company.Id,
-			&space.Company.Uid,
-			&space.Company.Name,
-		); err != nil {
-			return spaces, err
-		}
-		spaces = append(spaces, space)
-	}
-
-	return spaces, nil
 }
 
 func (gw *SpaceGateway) CreateSpace(ctx context.Context, spaceName string, companyId int) (int, error) {

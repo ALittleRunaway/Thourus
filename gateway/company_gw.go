@@ -9,6 +9,7 @@ import (
 type CompanyGw interface {
 	GetCompanyById(ctx context.Context, id int) (entity.Company, error)
 	GetCompanyByUid(ctx context.Context, uid string) (entity.Company, error)
+	GetSpacesInCompany(ctx context.Context, companyUid string) ([]entity.Space, error)
 	CreateCompany(ctx context.Context, name string) (int, error)
 	DeleteCompanyById(ctx context.Context, id int) error
 	DeleteCompanyByUid(ctx context.Context, uid string) error
@@ -66,6 +67,35 @@ func (gw *CompanyGateway) GetCompanyByUid(ctx context.Context, uid string) (enti
 	}
 
 	return company, nil
+}
+
+func (gw *CompanyGateway) GetSpacesInCompany(ctx context.Context, companyUid string) ([]entity.Space, error) {
+
+	const query = `
+	SELECT s.id, s.uid, s.name, c.id, c.uid, c.name FROM thourus.space s
+	INNER JOIN thourus.company c ON s.company_id = c.id
+	WHERE c.uid = ?;
+`
+	spaces := []entity.Space{}
+
+	rows, err := gw.db.QueryContext(ctx, query, companyUid)
+
+	for rows.Next() {
+		space := entity.Space{}
+		if err = rows.Scan(
+			&space.Id,
+			&space.Uid,
+			&space.Name,
+			&space.Company.Id,
+			&space.Company.Uid,
+			&space.Company.Name,
+		); err != nil {
+			return spaces, err
+		}
+		spaces = append(spaces, space)
+	}
+
+	return spaces, nil
 }
 
 func (gw *CompanyGateway) CreateCompany(ctx context.Context, name string) (int, error) {

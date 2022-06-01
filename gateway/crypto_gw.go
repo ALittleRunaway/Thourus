@@ -20,13 +20,16 @@ type CryptoGw interface {
 type CryptoGateway struct {
 	secretString string
 	cryptoBytes  []byte
+	miningRule   int64
 	grpcConn     *grpc.ClientConn
 }
 
-func NewCryptoGateway(secretString string) *CryptoGateway {
+func NewCryptoGateway(secretString string, miningRule int64, grpcConn *grpc.ClientConn) *CryptoGateway {
 	return &CryptoGateway{
 		secretString: secretString,
 		cryptoBytes:  []byte{35, 46, 57, 24, 85, 35, 24, 74, 87, 35, 88, 98, 66, 32, 14, 05},
+		miningRule:   miningRule,
+		grpcConn:     grpcConn,
 	}
 }
 
@@ -61,12 +64,12 @@ func (gw *CryptoGateway) DecryptPassword(text, MySecret string) (string, error) 
 	return string(plainText), nil
 }
 
-func (gw *CryptoGateway) GetDocumentPoW(docBytes []byte, miningRule int64) (int64, error) {
+func (gw *CryptoGateway) GetDocumentPoW(docBytes []byte) (int64, error) {
 	client := pb.NewCryptoCoreClient(gw.grpcConn)
 
 	request := &pb.MineRequest{
 		Bytes: docBytes,
-		Rule:  miningRule,
+		Rule:  gw.miningRule,
 	}
 	response, err := client.Mine(context.Background(), request)
 	if err != nil {

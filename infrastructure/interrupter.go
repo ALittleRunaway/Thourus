@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"database/sql"
+	"github.com/gin-gonic/gin"
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -16,6 +17,7 @@ type InterruptParams struct {
 	GrpcConn *grpc.ClientConn
 	DBConn   *sql.DB
 	NatsConn *nats.Conn
+	Server   *gin.Engine
 }
 
 func Interrupter(params InterruptParams) {
@@ -51,6 +53,12 @@ func Interrupter(params InterruptParams) {
 			params.NatsConn.Close()
 		}
 		params.Logger.Info("Nats connection is closed.")
+	}
+
+	// stopping the server
+	if params.Server != nil {
+		//params.Server.Close()
+		params.Logger.Info("Server is stopped.")
 	}
 
 }

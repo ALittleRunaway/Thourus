@@ -7,148 +7,207 @@ import (
 )
 
 type DocumentGw interface {
-	GetProjectById(ctx context.Context, projectId int) (entity.Project, error)
-	GetProjectByUid(ctx context.Context, projectUid string) (entity.Project, error)
-	GetProjectsInSpace(ctx context.Context, spaceId int) ([]entity.Project, error)
-	CreateProject(ctx context.Context, projectName string, spaceId int) (int, error)
-	RenameProjectById(ctx context.Context, newProjectName string, spaceId int) error
-	RenameProjectByUid(ctx context.Context, newProjectName string, spaceUid string) error
-	DeleteProjectById(ctx context.Context, projectId int) error
-	DeleteProjectByUid(ctx context.Context, projectUid string) error
+	GetDocumentById(ctx context.Context, documentId int) (entity.Document, error)
+	GetDocumentByUid(ctx context.Context, documentUid string) (entity.Document, error)
+	GetDocumentsInProjectById(ctx context.Context, projectId int) ([]entity.Document, error)
+	GetDocumentsInProjectByUid(ctx context.Context, projectUid string) ([]entity.Document, error)
+	CreateDocument(ctx context.Context, documentName string, documentPath string, creatorId int, projectId int) (int, error)
+	RenameDocumentById(ctx context.Context, newDocumentName string, documentId int) error
+	RenameDocumentByUid(ctx context.Context, newProjectName string, documentUid string) error
+	DeleteDocumentById(ctx context.Context, documentId int) error
+	DeleteDocumentByUid(ctx context.Context, documentUid string) error
 }
 
-type DocumentsGateway struct {
+type DocumentGateway struct {
 	db *sql.DB
 }
 
-func NewDocumentGateway(db *sql.DB) *DocumentsGateway {
-	return &DocumentsGateway{
+func NewDocumentGateway(db *sql.DB) *DocumentGateway {
+	return &DocumentGateway{
 		db: db,
 	}
 }
 
-func (gw *DocumentsGateway) GetDocumentById(ctx context.Context, projectId int) (entity.Project, error) {
+func (gw *DocumentGateway) GetDocumentById(ctx context.Context, documentId int) (entity.Document, error) {
 
 	const query = `
-	SELECT p.id, p.uid, p.name, s.id, s.uid, s.name, c.id, c.uid, c.name FROM thourus.project p
+	SELECT d.id, d.uid, d.name, d.path, u.uid,
+		   p.id, p.uid, p.name,
+		   s.id, s.uid, s.name
+	FROM thourus.document d
+	INNER JOIN thourus.project p ON d.project_id = p.id
 	INNER JOIN thourus.space s ON p.space_id = s.id
-	INNER JOIN thourus.company c ON s.company_id = c.id
+	INNER JOIN thourus.user u ON d.creator_id = u.id
+	WHERE d.id = ?;
+`
+	document := entity.Document{}
+
+	rows, err := gw.db.QueryContext(ctx, query, documentId)
+
+	for rows.Next() {
+		if err = rows.Scan(
+			&document.Id,
+			&document.Uid,
+			&document.Name,
+			&document.Path,
+			&document.Creator.Uid,
+			&document.Project.Id,
+			&document.Project.Uid,
+			&document.Project.Name,
+			&document.Space.Id,
+			&document.Space.Uid,
+			&document.Space.Name,
+		); err != nil {
+			return document, err
+		}
+	}
+
+	return document, nil
+}
+
+func (gw *DocumentGateway) GetDocumentByUid(ctx context.Context, documentUid string) (entity.Document, error) {
+
+	const query = `
+	SELECT d.id, d.uid, d.name, d.path, u.uid,
+		   p.id, p.uid, p.name,
+		   s.id, s.uid, s.name
+	FROM thourus.document d
+	INNER JOIN thourus.project p ON d.project_id = p.id
+	INNER JOIN thourus.space s ON p.space_id = s.id
+	INNER JOIN thourus.user u ON d.creator_id = u.id
+	WHERE d.uid = ?;
+`
+	document := entity.Document{}
+
+	rows, err := gw.db.QueryContext(ctx, query, documentUid)
+
+	for rows.Next() {
+		if err = rows.Scan(
+			&document.Id,
+			&document.Uid,
+			&document.Name,
+			&document.Path,
+			&document.Creator.Uid,
+			&document.Project.Id,
+			&document.Project.Uid,
+			&document.Project.Name,
+			&document.Space.Id,
+			&document.Space.Uid,
+			&document.Space.Name,
+		); err != nil {
+			return document, err
+		}
+	}
+
+	return document, nil
+}
+
+func (gw *DocumentGateway) GetDocumentsInProjectById(ctx context.Context, projectId int) ([]entity.Document, error) {
+
+	const query = `
+	SELECT d.id, d.uid, d.name, d.path, u.uid,
+		   p.id, p.uid, p.name,
+		   s.id, s.uid, s.name
+	FROM thourus.document d
+	INNER JOIN thourus.project p ON d.project_id = p.id
+	INNER JOIN thourus.space s ON p.space_id = s.id
+	INNER JOIN thourus.user u ON d.creator_id = u.id
 	WHERE p.id = ?;
 `
-	project := entity.Project{}
+	documents := []entity.Document{}
 
 	rows, err := gw.db.QueryContext(ctx, query, projectId)
 
 	for rows.Next() {
+		document := entity.Document{}
 		if err = rows.Scan(
-			&project.Id,
-			&project.Uid,
-			&project.Name,
-			&project.Space.Id,
-			&project.Space.Uid,
-			&project.Space.Name,
-			&project.Company.Id,
-			&project.Company.Uid,
-			&project.Company.Name,
+			&document.Id,
+			&document.Uid,
+			&document.Name,
+			&document.Path,
+			&document.Creator.Uid,
+			&document.Project.Id,
+			&document.Project.Uid,
+			&document.Project.Name,
+			&document.Space.Id,
+			&document.Space.Uid,
+			&document.Space.Name,
 		); err != nil {
-			return project, err
+			return documents, err
 		}
+		documents = append(documents, document)
 	}
 
-	return project, nil
+	return documents, nil
 }
 
-func (gw *DocumentsGateway) GetDocumentByUid(ctx context.Context, projectUid string) (entity.Project, error) {
+func (gw *DocumentGateway) GetDocumentsInProjectByUid(ctx context.Context, projectUid string) ([]entity.Document, error) {
 
 	const query = `
-	SELECT p.id, p.uid, p.name, s.id, s.uid, s.name, c.id, c.uid, c.name FROM thourus.project p
+	SELECT d.id, d.uid, d.name, d.path, u.uid,
+		   p.id, p.uid, p.name,
+		   s.id, s.uid, s.name
+	FROM thourus.document d
+	INNER JOIN thourus.project p ON d.project_id = p.id
 	INNER JOIN thourus.space s ON p.space_id = s.id
-	INNER JOIN thourus.company c ON s.company_id = c.id
-	WHERE p.uid = ?;
+	INNER JOIN thourus.user u ON d.creator_id = u.id
+	WHERE p.id = ?;
 `
-	project := entity.Project{}
+	documents := []entity.Document{}
 
 	rows, err := gw.db.QueryContext(ctx, query, projectUid)
 
 	for rows.Next() {
+		document := entity.Document{}
 		if err = rows.Scan(
-			&project.Id,
-			&project.Uid,
-			&project.Name,
-			&project.Space.Id,
-			&project.Space.Uid,
-			&project.Space.Name,
-			&project.Company.Id,
-			&project.Company.Uid,
-			&project.Company.Name,
+			&document.Id,
+			&document.Uid,
+			&document.Name,
+			&document.Path,
+			&document.Creator.Uid,
+			&document.Project.Id,
+			&document.Project.Uid,
+			&document.Project.Name,
+			&document.Space.Id,
+			&document.Space.Uid,
+			&document.Space.Name,
 		); err != nil {
-			return project, err
+			return documents, err
 		}
+		documents = append(documents, document)
 	}
 
-	return project, nil
+	return documents, nil
 }
 
-func (gw *DocumentsGateway) GetDocumentsInProject(ctx context.Context, spaceId int) ([]entity.Project, error) {
+func (gw *DocumentGateway) CreateDocument(ctx context.Context, documentName string, documentPath string, creatorId int, projectId int) (int, error) {
 
 	const query = `
-	SELECT p.id, p.uid, p.name, s.id, s.uid, s.name, c.id, c.uid, c.name FROM thourus.project p
-	INNER JOIN thourus.space s ON p.space_id = s.id
-	INNER JOIN thourus.company c ON s.company_id = c.id
-	WHERE s.id = ?;
+	INSERT INTO thourus.document (name, path, creator_id, status_id, project_id)
+	VALUES (?, ?, ?, 1, ?);
 `
-	projects := []entity.Project{}
+	var createdDocumentId int
 
-	rows, err := gw.db.QueryContext(ctx, query, spaceId)
-
-	for rows.Next() {
-		project := entity.Project{}
-		if err = rows.Scan(
-			&project.Id,
-			&project.Uid,
-			&project.Name,
-			&project.Space.Id,
-			&project.Space.Uid,
-			&project.Space.Name,
-			&project.Company.Id,
-			&project.Company.Uid,
-			&project.Company.Name,
-		); err != nil {
-			return projects, err
-		}
-		projects = append(projects, project)
-	}
-
-	return projects, nil
-}
-
-func (gw *DocumentsGateway) CreateDocument(ctx context.Context, projectName string, spaceId int) (int, error) {
-
-	const query = `
-	INSERT INTO thourus.project (name, space_id) VALUES (?, ?);
-`
-	var createdProjectId int
-
-	res, err := gw.db.ExecContext(ctx, query, projectName, spaceId)
+	res, err := gw.db.ExecContext(ctx, query, documentName, documentPath, creatorId, projectId)
 	if err != nil {
-		return createdProjectId, err
+		return createdDocumentId, err
 	}
 
 	createdProjectId64, err := res.LastInsertId()
 	if err != nil {
-		return createdProjectId, err
+		return createdDocumentId, err
 	}
-	createdProjectId = int(createdProjectId64)
+	createdDocumentId = int(createdProjectId64)
 
-	return createdProjectId, nil
+	return createdDocumentId, nil
 }
 
-func (gw *DocumentsGateway) RenameDocumentById(ctx context.Context, newProjectName string, spaceId int) error {
+func (gw *DocumentGateway) RenameDocumentById(ctx context.Context, newDocumentName string, documentId int) error {
 
 	const query = `
-	UPDATE thourus.project p SET p.name = ? WHERE p.id = 1;
+	UPDATE thourus.document d SET d.name = ? WHERE d.id = ?;
 `
-	_, err := gw.db.ExecContext(ctx, query, newProjectName, spaceId)
+	_, err := gw.db.ExecContext(ctx, query, newDocumentName, documentId)
 	if err != nil {
 		return err
 	}
@@ -156,12 +215,12 @@ func (gw *DocumentsGateway) RenameDocumentById(ctx context.Context, newProjectNa
 	return nil
 }
 
-func (gw *DocumentsGateway) RenameDocumentByUid(ctx context.Context, newProjectName string, spaceUid string) error {
+func (gw *DocumentGateway) RenameDocumentByUid(ctx context.Context, newProjectName string, documentUid string) error {
 
 	const query = `
-	UPDATE thourus.project p SET p.name = ? WHERE p.uid = 1;
+	UPDATE thourus.document d SET d.name = ? WHERE d.uid = ?;
 `
-	_, err := gw.db.ExecContext(ctx, query, newProjectName, spaceUid)
+	_, err := gw.db.ExecContext(ctx, query, newProjectName, documentUid)
 	if err != nil {
 		return err
 	}
@@ -169,12 +228,12 @@ func (gw *DocumentsGateway) RenameDocumentByUid(ctx context.Context, newProjectN
 	return nil
 }
 
-func (gw *DocumentsGateway) DeleteDocumentById(ctx context.Context, projectId int) error {
+func (gw *DocumentGateway) DeleteDocumentById(ctx context.Context, documentId int) error {
 
 	const query = `
-	DELETE FROM thourus.project p WHERE p.id = ?;
+	DELETE FROM thourus.document d WHERE d.id = ?;
 `
-	_, err := gw.db.ExecContext(ctx, query, projectId)
+	_, err := gw.db.ExecContext(ctx, query, documentId)
 	if err != nil {
 		return err
 	}
@@ -182,12 +241,12 @@ func (gw *DocumentsGateway) DeleteDocumentById(ctx context.Context, projectId in
 	return nil
 }
 
-func (gw *DocumentsGateway) DeleteDocumentByUid(ctx context.Context, projectUid string) error {
+func (gw *DocumentGateway) DeleteDocumentByUid(ctx context.Context, documentUid string) error {
 
 	const query = `
-	DELETE FROM thourus.project p WHERE p.uid = ?;
+	DELETE FROM thourus.document d WHERE d.uid = ?;
 `
-	_, err := gw.db.ExecContext(ctx, query, projectUid)
+	_, err := gw.db.ExecContext(ctx, query, documentUid)
 	if err != nil {
 		return err
 	}

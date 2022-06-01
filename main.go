@@ -57,6 +57,13 @@ func main() {
 		fatalErrCh <- err
 	}
 
+	// Starting the server
+	server, err := InitServer(appLogger, grpcConn, DBConn, NatsConn, cfg)
+	if err != nil {
+		appLogger.Error("The app could not start the server. Exiting")
+		fatalErrCh <- err
+	}
+
 	appLogger.Info("The app has started")
 
 	params := infrastructure.InterruptParams{
@@ -65,6 +72,7 @@ func main() {
 		GrpcConn: grpcConn,
 		DBConn:   DBConn,
 		NatsConn: NatsConn,
+		Server:   server,
 	}
 	infrastructure.Interrupter(params)
 
