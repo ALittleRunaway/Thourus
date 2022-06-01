@@ -15,6 +15,7 @@ type SpaceGw interface {
 	RenameSpaceByUid(ctx context.Context, newSpaceName string, spaceUid string) error
 	DeleteSpaceById(ctx context.Context, id int) error
 	DeleteSpaceByUid(ctx context.Context, uid string) error
+	AddUserToSpace(ctx context.Context, spaceUid string, userUid string) error
 }
 
 type SpaceGateway struct {
@@ -176,6 +177,18 @@ func (gw *SpaceGateway) DeleteSpaceByUid(ctx context.Context, uid string) error 
 	DELETE FROM thourus.space c WHERE c.uid = ?;
 `
 	_, err := gw.db.ExecContext(ctx, query, uid)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (gw *SpaceGateway) AddUserToSpace(ctx context.Context, spaceUid string, userUid string) error {
+	const query = `
+	INSERT INTO thourus.space_user (space_id, user_id) VALUES (?, ?);
+`
+	_, err := gw.db.ExecContext(ctx, query, spaceUid, userUid)
 	if err != nil {
 		return err
 	}

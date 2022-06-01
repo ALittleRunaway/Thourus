@@ -15,6 +15,7 @@ type ProjectGw interface {
 	RenameProjectByUid(ctx context.Context, newProjectName string, spaceUid string) error
 	DeleteProjectById(ctx context.Context, projectId int) error
 	DeleteProjectByUid(ctx context.Context, projectUid string) error
+	AddUserToProject(ctx context.Context, projectUid string, userUid string) error
 }
 
 type ProjectGateway struct {
@@ -188,6 +189,18 @@ func (gw *ProjectGateway) DeleteProjectByUid(ctx context.Context, projectUid str
 	DELETE FROM thourus.project p WHERE p.uid = ?;
 `
 	_, err := gw.db.ExecContext(ctx, query, projectUid)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (gw *ProjectGateway) AddUserToProject(ctx context.Context, projectUid string, userUid string) error {
+	const query = `
+	INSERT INTO thourus.project_user (project_id, user_id) VALUES (?, ?);
+`
+	_, err := gw.db.ExecContext(ctx, query, projectUid, userUid)
 	if err != nil {
 		return err
 	}
