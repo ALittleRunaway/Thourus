@@ -8,6 +8,7 @@ import (
 
 type UserGw interface {
 	GetUserByPasswordAndLogin(ctx context.Context, UserPassword string, userLogin string) (entity.User, error)
+	GetUserByUid(ctx context.Context, userUid string) (entity.User, error)
 }
 
 type UserGateway struct {
@@ -19,43 +20,6 @@ func NewUserGateway(db *sql.DB) *UserGateway {
 		db: db,
 	}
 }
-
-//func (gw *UserGateway) GetUserById(ctx context.Context, documentId int) (entity.Document, error) {
-//
-//	const query = `
-//	SELECT d.id, d.uid, d.name, d.path, u.uid,
-//		   p.id, p.uid, p.name,
-//		   s.id, s.uid, s.name
-//	FROM thourus.document d
-//	INNER JOIN thourus.project p ON d.project_id = p.id
-//	INNER JOIN thourus.space s ON p.space_id = s.id
-//	INNER JOIN thourus.user u ON d.creator_id = u.id
-//	WHERE d.id = ?;
-//`
-//	document := entity.Document{}
-//
-//	rows, err := gw.db.QueryContext(ctx, query, documentId)
-//
-//	for rows.Next() {
-//		if err = rows.Scan(
-//			&document.Id,
-//			&document.Uid,
-//			&document.Name,
-//			&document.Path,
-//			&document.Creator.Uid,
-//			&document.Project.Id,
-//			&document.Project.Uid,
-//			&document.Project.Name,
-//			&document.Space.Id,
-//			&document.Space.Uid,
-//			&document.Space.Name,
-//		); err != nil {
-//			return document, err
-//		}
-//	}
-//
-//	return document, nil
-//}
 
 func (gw *UserGateway) GetUserByPasswordAndLogin(ctx context.Context, UserPassword string, userLogin string) (entity.User, error) {
 
@@ -93,43 +57,42 @@ func (gw *UserGateway) GetUserByPasswordAndLogin(ctx context.Context, UserPasswo
 	return user, nil
 }
 
-//func (gw *UserGateway) GetUserByUid(ctx context.Context, documentUid string) (entity.Document, error) {
-//
-//	const query = `
-//	SELECT d.id, d.uid, d.name, d.path, u.uid,
-//		   p.id, p.uid, p.name,
-//		   s.id, s.uid, s.name
-//	FROM thourus.document d
-//	INNER JOIN thourus.project p ON d.project_id = p.id
-//	INNER JOIN thourus.space s ON p.space_id = s.id
-//	INNER JOIN thourus.user u ON d.creator_id = u.id
-//	WHERE d.uid = ?;
-//`
-//	document := entity.Document{}
-//
-//	rows, err := gw.db.QueryContext(ctx, query, documentUid)
-//
-//	for rows.Next() {
-//		if err = rows.Scan(
-//			&document.Id,
-//			&document.Uid,
-//			&document.Name,
-//			&document.Path,
-//			&document.Creator.Uid,
-//			&document.Project.Id,
-//			&document.Project.Uid,
-//			&document.Project.Name,
-//			&document.Space.Id,
-//			&document.Space.Uid,
-//			&document.Space.Name,
-//		); err != nil {
-//			return document, err
-//		}
-//	}
-//
-//	return document, nil
-//}
-//
+func (gw *UserGateway) GetUserByUid(ctx context.Context, userUid string) (entity.User, error) {
+
+	const query = `
+	SELECT u.id, u.uid, u.name, surname, email, r.id, r.uid, r.name, c.id, c.uid, c.name
+	FROM thourus.user u
+	INNER JOIN thourus.role r ON u.role_id = r.id
+	INNER JOIN thourus.space_user su ON u.id = su.user_id
+	INNER JOIN thourus.space s ON su.space_id = s.id
+	INNER JOIN thourus.company c ON s.company_id = c.id
+	WHERE u.uid = ?;
+`
+	user := entity.User{}
+
+	rows, err := gw.db.QueryContext(ctx, query, userUid)
+
+	for rows.Next() {
+		if err = rows.Scan(
+			&user.Id,
+			&user.Uid,
+			&user.Name,
+			&user.Surname,
+			&user.Email,
+			&user.Role.Id,
+			&user.Role.Uid,
+			&user.Role.Name,
+			&user.Company.Id,
+			&user.Company.Uid,
+			&user.Company.Name,
+		); err != nil {
+			return user, err
+		}
+	}
+
+	return user, nil
+}
+
 //func (gw *UserGateway) GetUsersInProjectById(ctx context.Context, projectId int) ([]entity.Document, error) {
 //
 //	const query = `

@@ -100,7 +100,7 @@ func (gw *ProjectGateway) GetDocumentsInProject(ctx context.Context, projectUid 
 	INNER JOIN thourus.project p ON d.project_id = p.id
 	INNER JOIN thourus.space s ON p.space_id = s.id
 	INNER JOIN thourus.user u ON d.creator_id = u.id
-	WHERE p.id = ?;
+	WHERE p.uid = ?;
 `
 	documents := []entity.Document{}
 

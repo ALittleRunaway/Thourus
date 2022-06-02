@@ -24,20 +24,22 @@ func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn 
 	projectGw := gateway.NewProjectGateway(dbConn)
 	documentGw := gateway.NewDocumentGateway(dbConn)
 	userGw := gateway.NewUserGateway(dbConn)
-	//mailGw := gateway.NewMailGateway(natsConn)
+	mailGw := gateway.NewMailGateway(natsConn)
 	cryptoGw := gateway.NewCryptoGateway(cfg.Crypto.SecretString, cfg.Crypto.Rule, grpcConn)
 	storageGw := gateway.NewStorageGateway(cfg.DB.StoragePath)
 
 	companyUc := usecase.NewCompanyUseCase(companyGw, appLogger)
-	documentUc := usecase.NewDocumentUseCase(documentGw, storageGw, cryptoGw, appLogger)
+	documentUc := usecase.NewDocumentUseCase(documentGw, storageGw, cryptoGw, userGw, projectGw, appLogger)
 	userUc := usecase.NewUserUseCase(userGw, appLogger)
 	spaceUc := usecase.NewSpaceUseCase(spaceGw, appLogger)
 	projectUc := usecase.NewProjectUseCase(projectGw, appLogger)
+	mailUc := usecase.NewMailUseCase(mailGw, appLogger)
 
 	apiRoute := server.Group("/api")
 	{
 		apiRoute.GET("/ping", func(ctx *gin.Context) { ctx.JSON(200, gin.H{"message": "pong"}) })
-		apiRoute.POST("/document/upload", func(ctx *gin.Context) { entrypoint.UploadNewDocument(documentUc, ctx) })
+		apiRoute.POST("/document/upload", func(ctx *gin.Context) { entrypoint.UploadNewDocument(documentUc, mailUc, ctx) })
+		apiRoute.GET("/document/:uid/delete", func(ctx *gin.Context) { entrypoint.DeleteDocument(documentUc, ctx) })
 		apiRoute.GET("/login/", func(ctx *gin.Context) { entrypoint.LoginUser(userUc, ctx) })
 	}
 

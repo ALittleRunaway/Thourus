@@ -4,13 +4,16 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 	pb "thourus-api/infrastructure/grpc/proto"
 )
 
 type CryptoGw interface {
+	GenerateHash(bytes []byte) string
 	EncryptPassword(text, MySecret string) (string, error)
 	DecryptPassword(text, MySecret string) (string, error)
 	GetDocumentPoW(docBytes []byte) (int64, error)
@@ -31,6 +34,12 @@ func NewCryptoGateway(secretString string, miningRule int64, grpcConn *grpc.Clie
 		miningRule:   miningRule,
 		grpcConn:     grpcConn,
 	}
+}
+
+func (gw *CryptoGateway) GenerateHash(bytes []byte) string {
+	h := sha256.New()
+	h.Write([]byte(fmt.Sprintf("%v", bytes)))
+	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 // EncryptPassword method is to encrypt or hide any classified text

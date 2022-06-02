@@ -10,6 +10,7 @@ type DocumentGw interface {
 	GetDocumentById(ctx context.Context, documentId int) (entity.Document, error)
 	GetDocumentByUid(ctx context.Context, documentUid string) (entity.Document, error)
 	CreateDocument(ctx context.Context, documentName string, documentPath string, creatorId int, projectId int) (int, error)
+	AddDocumentHistory(ctx context.Context, documentId int, hash string, PoW int64, initiatorIdd int) (int, error)
 	RenameDocumentById(ctx context.Context, newDocumentName string, documentId int) error
 	RenameDocumentByUid(ctx context.Context, newProjectName string, documentUid string) error
 	DeleteDocumentById(ctx context.Context, documentId int) error
@@ -122,6 +123,28 @@ func (gw *DocumentGateway) CreateDocument(ctx context.Context, documentName stri
 	return createdDocumentId, nil
 }
 
+func (gw *DocumentGateway) AddDocumentHistory(ctx context.Context, documentId int, hash string, PoW int64, initiatorIdd int) (int, error) {
+
+	const query = `
+	INSERT INTO thourus.history (document_id, hash, pow, initiator_id)
+	VALUES (?, ?, ?, ?);
+`
+	var createdDocumentHistoryId int
+
+	res, err := gw.db.ExecContext(ctx, query, documentId, hash, PoW, initiatorIdd)
+	if err != nil {
+		return createdDocumentHistoryId, err
+	}
+
+	createdProjectId64, err := res.LastInsertId()
+	if err != nil {
+		return createdDocumentHistoryId, err
+	}
+	createdDocumentHistoryId = int(createdProjectId64)
+
+	return createdDocumentHistoryId, nil
+}
+
 func (gw *DocumentGateway) RenameDocumentById(ctx context.Context, newDocumentName string, documentId int) error {
 
 	const query = `
@@ -164,9 +187,18 @@ func (gw *DocumentGateway) DeleteDocumentById(ctx context.Context, documentId in
 func (gw *DocumentGateway) DeleteDocumentByUid(ctx context.Context, documentUid string) error {
 
 	const query = `
-	DELETE FROM thourus.document d WHERE d.uid = ?;
+	DELETE FROM thourus.history h WHERE h.document_id = 
+	(SELECT d.id FROM thourus.document d WHERE d.uid = ?);
 `
 	_, err := gw.db.ExecContext(ctx, query, documentUid)
+	if err != nil {
+		return err
+	}
+
+	const query2 = `
+	DELETE FROM thourus.document d WHERE d.uid = ?;
+`
+	_, err = gw.db.ExecContext(ctx, query2, documentUid)
 	if err != nil {
 		return err
 	}

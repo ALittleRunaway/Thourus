@@ -19,7 +19,7 @@ func InitCryptoConfig() *CryptoConfig {
 }
 
 func init() {
-	viper.SetDefault("cryptocore.rule", 54321)
+	viper.SetDefault("cryptocore.rule", 1)
 	InitError(viper.BindEnv("cryptocore.secret_string", EnvPrefix+"_CRYPTO_SECRET_STRING"))
 	InitError(viper.BindEnv("cryptocore.rule", EnvPrefix+"_CRYPTO_RULE"))
 }

@@ -11,11 +11,12 @@ const serviceName = "grpc"
 
 func NewGrpcConnection(grpcCfg *config.GrpcConfig, logger *zap.SugaredLogger) (*grpc.ClientConn, error) {
 
+	maxMsgSize := 1024 * 1024 * 20
 	serviceLogger := logger.Named(serviceName)
 
 	serviceLogger.Info("Establishing the gRPC connection...")
 
-	conn, err := grpc.Dial(grpcCfg.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(grpcCfg.Addr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxMsgSize), grpc.MaxCallSendMsgSize(maxMsgSize)))
 	if err != nil {
 		return &grpc.ClientConn{}, err
 	}
