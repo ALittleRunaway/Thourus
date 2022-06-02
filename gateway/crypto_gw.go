@@ -13,7 +13,7 @@ import (
 type CryptoGw interface {
 	EncryptPassword(text, MySecret string) (string, error)
 	DecryptPassword(text, MySecret string) (string, error)
-	GetDocumentPoW(docBytes []byte, miningRule int64) (int64, error)
+	GetDocumentPoW(docBytes []byte) (int64, error)
 	ValidateDocument(docBytes []byte, hash string, PoW int64) (bool, error)
 }
 

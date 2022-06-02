@@ -1,7 +1,6 @@
 package entrypoint
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"thourus-api/domain/usecase"
@@ -9,16 +8,22 @@ import (
 
 func GetSpacesInCompany(companyUc *usecase.CompanyUseCase, ctx *gin.Context) {
 	companyUid := ctx.Param("uid")
+
 	spaces, err := companyUc.GetSpacesInCompany(companyUid)
 	if err != nil {
-		fmt.Println(err)
+		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err}.Error())
+	}
+
+	company, err := companyUc.GetCompanyInfo(companyUid)
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err}.Error())
 	}
 
 	data := gin.H{
-		"title":  "Spaces in your company",
-		"spaces": spaces,
+		"title":       "Spaces in your company",
+		"companyName": company.Name,
+		"spaces":      spaces,
 	}
 
-	ctx.HTML(http.StatusOK, "index.html", data)
+	ctx.HTML(http.StatusOK, "company.html", data)
 }

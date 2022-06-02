@@ -32,22 +32,8 @@ func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn 
 	fmt.Println(companyGw, storageGw, spaceGw, projectGw, documentGw, userGw, mailGw, cryptoGw)
 
 	companyUc := usecase.NewCompanyUseCase(companyGw, appLogger)
-
-	//apiRoute := server.Group("/company")
-	//{
-	//	apiRoute.GET("/:uid", func(ctx *gin.Context) {
-	//		entrypoint.GetSpacesInCompany(companyUc, ctx)
-	//	})
-	//}
-	//
-	//viewRoute := server.Group("/service")
-	//{
-	//	viewRoute.GET("/ping", func(ctx *gin.Context) {
-	//		ctx.JSON(200, gin.H{
-	//			"message": "pong",
-	//		})
-	//	})
-	//}
+	documentUc := usecase.NewDocumentUseCase(documentGw, storageGw, cryptoGw, appLogger)
+	userUc := usecase.NewUserUseCase(userGw, appLogger)
 
 	apiRoute := server.Group("/api")
 	{
@@ -58,10 +44,22 @@ func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn 
 			})
 		})
 
+		apiRoute.POST("/document/upload", func(ctx *gin.Context) {
+			entrypoint.UploadNewDocument(documentUc, ctx)
+		})
+
+		apiRoute.GET("/login/", func(ctx *gin.Context) {
+			entrypoint.LoginUser(userUc, ctx)
+		})
+
 	}
 
 	viewRoute := server.Group("/view")
 	{
+		viewRoute.GET("/login", func(ctx *gin.Context) {
+			entrypoint.Login(ctx)
+		})
+
 		viewRoute.GET("/company/:uid", func(ctx *gin.Context) {
 			entrypoint.GetSpacesInCompany(companyUc, ctx)
 		})
