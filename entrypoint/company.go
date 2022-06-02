@@ -19,10 +19,18 @@ func GetSpacesInCompany(companyUc *usecase.CompanyUseCase, ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err}.Error())
 	}
 
+	var emptyMessage string
+	if len(spaces) != 0 {
+		emptyMessage = ""
+	} else {
+		emptyMessage = "There are no spaces in the company"
+	}
+
 	data := gin.H{
-		"title":       "Spaces in your company",
-		"companyName": company.Name,
-		"spaces":      spaces,
+		"title":        "Spaces in your company",
+		"companyName":  company.Name,
+		"spaces":       spaces,
+		"emptyMessage": emptyMessage,
 	}
 
 	ctx.HTML(http.StatusOK, "company.html", data)

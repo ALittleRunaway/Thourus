@@ -9,6 +9,7 @@ import (
 type SpaceGw interface {
 	GetSpaceById(ctx context.Context, spaceId int) (entity.Space, error)
 	GetSpaceByUid(ctx context.Context, spaceUid string) (entity.Space, error)
+	GetProjectsInSpace(ctx context.Context, spaceUid string) ([]entity.Project, error)
 	CreateSpace(ctx context.Context, spaceName string, companyId int) (int, error)
 	RenameSpaceById(ctx context.Context, newSpaceName string, spaceId int) error
 	RenameSpaceByUid(ctx context.Context, newSpaceName string, spaceUid string) error
@@ -79,6 +80,39 @@ func (gw *SpaceGateway) GetSpaceByUid(ctx context.Context, spaceUid string) (ent
 	}
 
 	return space, nil
+}
+
+func (gw *SpaceGateway) GetProjectsInSpace(ctx context.Context, spaceUid string) ([]entity.Project, error) {
+
+	const query = `
+	SELECT p.id, p.uid, p.name, s.id, s.uid, s.name, c.id, c.uid, c.name FROM thourus.project p
+	INNER JOIN thourus.space s ON p.space_id = s.id
+	INNER JOIN thourus.company c ON s.company_id = c.id
+	WHERE s.uid = ?;
+`
+	projects := []entity.Project{}
+
+	rows, err := gw.db.QueryContext(ctx, query, spaceUid)
+
+	for rows.Next() {
+		project := entity.Project{}
+		if err = rows.Scan(
+			&project.Id,
+			&project.Uid,
+			&project.Name,
+			&project.Space.Id,
+			&project.Space.Uid,
+			&project.Space.Name,
+			&project.Company.Id,
+			&project.Company.Uid,
+			&project.Company.Name,
+		); err != nil {
+			return projects, err
+		}
+		projects = append(projects, project)
+	}
+
+	return projects, nil
 }
 
 func (gw *SpaceGateway) CreateSpace(ctx context.Context, spaceName string, companyId int) (int, error) {

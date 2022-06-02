@@ -3,7 +3,7 @@
 <header class="p-3 bg-dark text-white">
     <div class="container">
         <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-            <h1 >{{ .companyName}}</h1>
+            <h1 >{{ .spaceName}}</h1>
         </div>
     </div>
 </header>
@@ -11,16 +11,16 @@
 <div class="album py-4 bg-light">
     <div class="container">
         <div class="row">
-            {{ range .spaces}}
+            {{ range .projects}}
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-header bg-dark text-light">
-                        Space
+                        Project
                     </div>
                     <div class="card-body bg-secondary">
                         <h3 class="card-title">{{ .Name}}</h3>
-                        <p class="card-text">Space in <b>{{ .Company.Name}}</b> company</p>
-                        <a href="/view/space/{{ .Uid}}" class="btn btn-dark">Go to {{ .Name}} space</a>
+                        <p class="card-text">Project in <b>{{ .Space.Name}}</b> space</p>
+                        <a href="/view/project/{{ .Uid}}" class="btn btn-dark">Go to {{ .Name}} project</a>
 <!--                        <form action="https://localhost:9999/api/document/upload/" enctype="multipart/form-data" method="POST">-->
 <!--                            <input type="file" name="file" accept="*" />-->
 <!--                            <button type="submit">submit </button>-->

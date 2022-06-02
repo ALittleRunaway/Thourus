@@ -9,8 +9,6 @@ import (
 type DocumentGw interface {
 	GetDocumentById(ctx context.Context, documentId int) (entity.Document, error)
 	GetDocumentByUid(ctx context.Context, documentUid string) (entity.Document, error)
-	GetDocumentsInProjectById(ctx context.Context, projectId int) ([]entity.Document, error)
-	GetDocumentsInProjectByUid(ctx context.Context, projectUid string) ([]entity.Document, error)
 	CreateDocument(ctx context.Context, documentName string, documentPath string, creatorId int, projectId int) (int, error)
 	RenameDocumentById(ctx context.Context, newDocumentName string, documentId int) error
 	RenameDocumentByUid(ctx context.Context, newProjectName string, documentUid string) error
@@ -100,84 +98,6 @@ func (gw *DocumentGateway) GetDocumentByUid(ctx context.Context, documentUid str
 	}
 
 	return document, nil
-}
-
-func (gw *DocumentGateway) GetDocumentsInProjectById(ctx context.Context, projectId int) ([]entity.Document, error) {
-
-	const query = `
-	SELECT d.id, d.uid, d.name, d.path, u.uid,
-		   p.id, p.uid, p.name,
-		   s.id, s.uid, s.name
-	FROM thourus.document d
-	INNER JOIN thourus.project p ON d.project_id = p.id
-	INNER JOIN thourus.space s ON p.space_id = s.id
-	INNER JOIN thourus.user u ON d.creator_id = u.id
-	WHERE p.id = ?;
-`
-	documents := []entity.Document{}
-
-	rows, err := gw.db.QueryContext(ctx, query, projectId)
-
-	for rows.Next() {
-		document := entity.Document{}
-		if err = rows.Scan(
-			&document.Id,
-			&document.Uid,
-			&document.Name,
-			&document.Path,
-			&document.Creator.Uid,
-			&document.Project.Id,
-			&document.Project.Uid,
-			&document.Project.Name,
-			&document.Space.Id,
-			&document.Space.Uid,
-			&document.Space.Name,
-		); err != nil {
-			return documents, err
-		}
-		documents = append(documents, document)
-	}
-
-	return documents, nil
-}
-
-func (gw *DocumentGateway) GetDocumentsInProjectByUid(ctx context.Context, projectUid string) ([]entity.Document, error) {
-
-	const query = `
-	SELECT d.id, d.uid, d.name, d.path, u.uid,
-		   p.id, p.uid, p.name,
-		   s.id, s.uid, s.name
-	FROM thourus.document d
-	INNER JOIN thourus.project p ON d.project_id = p.id
-	INNER JOIN thourus.space s ON p.space_id = s.id
-	INNER JOIN thourus.user u ON d.creator_id = u.id
-	WHERE p.id = ?;
-`
-	documents := []entity.Document{}
-
-	rows, err := gw.db.QueryContext(ctx, query, projectUid)
-
-	for rows.Next() {
-		document := entity.Document{}
-		if err = rows.Scan(
-			&document.Id,
-			&document.Uid,
-			&document.Name,
-			&document.Path,
-			&document.Creator.Uid,
-			&document.Project.Id,
-			&document.Project.Uid,
-			&document.Project.Name,
-			&document.Space.Id,
-			&document.Space.Uid,
-			&document.Space.Name,
-		); err != nil {
-			return documents, err
-		}
-		documents = append(documents, document)
-	}
-
-	return documents, nil
 }
 
 func (gw *DocumentGateway) CreateDocument(ctx context.Context, documentName string, documentPath string, creatorId int, projectId int) (int, error) {

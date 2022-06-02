@@ -9,7 +9,7 @@ import (
 type ProjectGw interface {
 	GetProjectById(ctx context.Context, projectId int) (entity.Project, error)
 	GetProjectByUid(ctx context.Context, projectUid string) (entity.Project, error)
-	GetProjectsInSpace(ctx context.Context, spaceId int) ([]entity.Project, error)
+	GetDocumentsInProject(ctx context.Context, projectUid string) ([]entity.Document, error)
 	CreateProject(ctx context.Context, projectName string, spaceId int) (int, error)
 	RenameProjectById(ctx context.Context, newProjectName string, spaceId int) error
 	RenameProjectByUid(ctx context.Context, newProjectName string, spaceUid string) error
@@ -90,37 +90,43 @@ func (gw *ProjectGateway) GetProjectByUid(ctx context.Context, projectUid string
 	return project, nil
 }
 
-func (gw *ProjectGateway) GetProjectsInSpace(ctx context.Context, spaceId int) ([]entity.Project, error) {
+func (gw *ProjectGateway) GetDocumentsInProject(ctx context.Context, projectUid string) ([]entity.Document, error) {
 
 	const query = `
-	SELECT p.id, p.uid, p.name, s.id, s.uid, s.name, c.id, c.uid, c.name FROM thourus.project p
+	SELECT d.id, d.uid, d.name, d.path, u.uid,
+		   p.id, p.uid, p.name,
+		   s.id, s.uid, s.name
+	FROM thourus.document d
+	INNER JOIN thourus.project p ON d.project_id = p.id
 	INNER JOIN thourus.space s ON p.space_id = s.id
-	INNER JOIN thourus.company c ON s.company_id = c.id
-	WHERE s.id = ?;
+	INNER JOIN thourus.user u ON d.creator_id = u.id
+	WHERE p.id = ?;
 `
-	projects := []entity.Project{}
+	documents := []entity.Document{}
 
-	rows, err := gw.db.QueryContext(ctx, query, spaceId)
+	rows, err := gw.db.QueryContext(ctx, query, projectUid)
 
 	for rows.Next() {
-		project := entity.Project{}
+		document := entity.Document{}
 		if err = rows.Scan(
-			&project.Id,
-			&project.Uid,
-			&project.Name,
-			&project.Space.Id,
-			&project.Space.Uid,
-			&project.Space.Name,
-			&project.Company.Id,
-			&project.Company.Uid,
-			&project.Company.Name,
+			&document.Id,
+			&document.Uid,
+			&document.Name,
+			&document.Path,
+			&document.Creator.Uid,
+			&document.Project.Id,
+			&document.Project.Uid,
+			&document.Project.Name,
+			&document.Space.Id,
+			&document.Space.Uid,
+			&document.Space.Name,
 		); err != nil {
-			return projects, err
+			return documents, err
 		}
-		projects = append(projects, project)
+		documents = append(documents, document)
 	}
 
-	return projects, nil
+	return documents, nil
 }
 
 func (gw *ProjectGateway) CreateProject(ctx context.Context, projectName string, spaceId int) (int, error) {
