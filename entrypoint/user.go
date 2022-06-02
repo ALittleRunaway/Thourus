@@ -19,6 +19,5 @@ func LoginUser(userUc *usecase.UserUseCase, ctx *gin.Context) {
 }
 
 func Login(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "login.html", struct {
-	}{})
+	ctx.HTML(http.StatusOK, "login.html", struct{}{})
 }

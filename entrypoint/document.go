@@ -1,46 +1,37 @@
 package entrypoint
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"io"
-	"log"
+	"mime/multipart"
 	"net/http"
-	"os"
 	"thourus-api/domain/usecase"
 )
 
-func UploadNewDocument(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {
+type BindFile struct {
+	File *multipart.FileHeader `form:"file" binding:"required"`
+}
 
-	file, header, err := ctx.Request.FormFile("file")
+func UploadNewDocument(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {
+	file, err := ctx.FormFile("file")
+
+	// The file cannot be received.
 	if err != nil {
-		ctx.String(http.StatusBadRequest, fmt.Sprintf("file err : %s", err.Error()))
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "No file is received",
+		})
 		return
 	}
-	filename := header.Filename
-	out, err := os.Create("public/" + filename)
+	err = documentUc.UploadNewDocument(file)
 	if err != nil {
-		log.Fatal(err)
+		return
 	}
-	defer out.Close()
-	_, err = io.Copy(out, file)
-	if err != nil {
-		log.Fatal(err)
-	}
-	filepath := "http://localhost:8080/file/" + filename
-	ctx.JSON(http.StatusOK, gin.H{"filepath": filepath})
 
-	//companyUid := ctx.Param("uid")
-	//spaces, err := companyUc.GetSpacesInCompany(companyUid)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err}.Error())
-	//}
-	//
-	//data := gin.H{
-	//	"title":  "Spaces in your company",
-	//	"spaces": spaces,
-	//}
-	//
-	//ctx.HTML(http.StatusOK, "company.html", data)
+	// File saved successfully. Return proper result
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Your file has been successfully uploaded.",
+	})
+}
+
+func AddDocument(ctx *gin.Context) {
+	ctx.HTML(http.StatusOK, "add_document.html", struct{}{})
 }

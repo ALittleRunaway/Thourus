@@ -47,6 +47,7 @@ func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn 
 		viewRoute.GET("/company/:uid", func(ctx *gin.Context) { entrypoint.GetSpacesInCompany(companyUc, ctx) })
 		viewRoute.GET("/space/:uid", func(ctx *gin.Context) { entrypoint.GetProjectsInSpace(spaceUc, ctx) })
 		viewRoute.GET("/project/:uid", func(ctx *gin.Context) { entrypoint.GetDocumentsInProject(projectUc, ctx) })
+		viewRoute.GET("/document/add", func(ctx *gin.Context) { entrypoint.AddDocument(ctx) })
 	}
 
 	go func() {

@@ -6,6 +6,7 @@ import (
 )
 
 type StorageGw interface {
+	SaveDocument(path string, bytes []byte) error
 }
 
 type StorageGateway struct {

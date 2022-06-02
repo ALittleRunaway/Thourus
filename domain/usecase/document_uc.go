@@ -1,7 +1,12 @@
 package usecase
 
 import (
+	"bytes"
+	"fmt"
 	"go.uber.org/zap"
+	"io"
+	"io/ioutil"
+	"mime/multipart"
 	"thourus-api/gateway"
 )
 
@@ -21,12 +26,25 @@ func NewDocumentUseCase(documentGw gateway.DocumentGw, storageGw gateway.Storage
 	}
 }
 
-func (uc *CompanyUseCase) UploadNewDocument(projectUid string) {
-	//func (uc *CompanyUseCase) UploadNewDocument(projectUid string) ([]entity.Space, error) {
-	//spaces, err := uc.companyGw.GetSpacesInCompany(context.Background(), companyUid)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//return spaces, nil
+func (uc *DocumentUseCase) UploadNewDocument(fileHeader *multipart.FileHeader) error {
+	newFileName := fileHeader.Filename
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		return err
+	}
+	buf := bytes.NewBuffer(nil)
+	if _, err := io.Copy(buf, file); err != nil {
+		return err
+	}
+
+	err = uc.storageGw.SaveDocument(fmt.Sprintf("./storage/%s", newFileName), buf.Bytes())
+	if err != nil {
+		return err
+	}
+
+	byteContainer, err := ioutil.ReadAll(file) // why the long names though?
+	fmt.Printf("size:%d", len(byteContainer))
+	return nil
 
 }
