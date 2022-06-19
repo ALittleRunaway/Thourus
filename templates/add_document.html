@@ -10,10 +10,6 @@
 
     <link rel="canonical" href="https://getbootstrap.com/docs/5.2/examples/checkout/">
 
-    
-
-    
-
 <link href="/templates/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
@@ -73,12 +69,13 @@
     <!-- Custom styles for this template -->
     <link href="form-validation.css" rel="stylesheet">
   </head>
-  <body class="bg-light">
+<!--  <body class="bg-light">-->
     
 <div class="container">
   <main>
     <div class="py-5 text-center">
-      <img class="d-block mx-auto mb-4" src="/templates/assets/brand/bootstrap-logo.svg" alt="" width="72" height="57">
+<!--      <img class="d-block mx-auto mb-4" src="/templates/assets/brand/bootstrap-logo.svg" alt="" width="72" height="57">-->
+      <img class="mb-4" src="/templates/assets/brand/thourus_logo.svg" alt="" width="300" >
       <h2>Add a new document</h2>
       <p class="lead">Below is an example form built entirely with Bootstrap’s form controls. Each required form group has a validation state that can be triggered by attempting to submit the form without completing it.</p>
     </div>
@@ -103,18 +100,7 @@
   </main>
 
 </div>
-
     <script>
-
-      function setCookie(name,value,days) {
-        var expires = "";
-        if (days) {
-          var date = new Date();
-          date.setTime(date.getTime() + (days*24*60*60*1000));
-          expires = "; expires=" + date.toUTCString();
-        }
-        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-      }
 
       function getCookie(name) {
         var nameEQ = name + "=";
@@ -127,18 +113,10 @@
         return null;
       }
 
-      function eraseCookie(name) {
-        document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-      }
-
 
       function SendFile() {
         let file = document.getElementById("file").files[0];
         let formData = new FormData();
-        // eraseCookie("project_uid")
-        // const lastItem = thePath.substring(thePath.lastIndexOf('/') + 1)
-        // alert(lastItem)
-        // setCookie("project_uid", lastItem, 7)
 
         formData.append("file", file);
 
@@ -146,7 +124,9 @@
 
           if ( response.status === 200 || response.status === 201) {
             alert("File was uploaded successfully!")
-            window.history.go(-1); return false;
+
+            let projectUid = getCookie("project_uid")
+            window.location = "http://localhost:9999/view/project/" + projectUid;
           } else {
             alert("File was not uploaded")
           }
@@ -154,4 +134,5 @@
       }
     </script>
 
-  </body>
+
+{{ template "footer.html" }}

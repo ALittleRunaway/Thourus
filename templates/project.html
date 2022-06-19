@@ -28,8 +28,9 @@
                         <p class="card-text">Document in <b>{{ .Project.Name}}</b> project</p>
                         <p class="card-text"><b>Status: </b>Stable</p>
                         <p class="card-text"><b>Creator: </b>Maria Petrova</p>
-                        <a class="btn btn-dark" onclick="DeleteDocument('{{ .Uid}}')">Delete document</a>
-                        <a class="btn btn-outline-light m-1" onclick="DownloadDocument('{{ .Uid}}')">Download document</a>
+                        <a class="btn btn-light m-1 w-auto" onclick="DownloadDocument('{{ .Uid}}')">Update</a>
+                        <a class="btn btn-outline-light m-1 w-auto" onclick="DownloadDocument('{{ .Uid}}')">Download</a>
+                        <a class="btn btn-dark w-auto" onclick="DeleteDocument('{{ .Uid}}')">Delete</a>
                     </div>
                 </div>
             </div>
@@ -38,17 +39,29 @@
         </div>
     </div>
 </div>
-
 <script>
-    function DeleteDocument(a) {
-        alert(a)
-        fetch('http://localhost:9999/api/document/' + a + '/delete').then(function(response) {
+
+    function DeleteDocument(documentUid) {
+        fetch('http://localhost:9999/api/document/' + documentUid + '/delete').then(function(response) {
             if ( response.status === 200 || response.status === 201) {
                 alert("File was deleted successfully!")
-                // window.
-                // window.history.go(-1); return false;
+                window.location.reload()
             } else {
                 alert("File was not deleted")
+            }
+        });
+    }
+
+    function DownloadDocument(documentUid) {
+        downloadUrl = 'http://localhost:9999/api/document/' + documentUid + '/download';
+        fetch(downloadUrl).then(function(response) {
+            if ( response.status === 200 || response.status === 201) {
+                window.location.assign(downloadUrl);
+            } else if  ( response.status === 404) {
+                alert("File was not found")
+            }
+            else {
+                alert("File was not downloaded due to en error")
             }
         });
     }

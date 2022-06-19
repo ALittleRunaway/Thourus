@@ -82,7 +82,7 @@ func (gw *CryptoGateway) GetDocumentPoW(docBytes []byte) (int64, error) {
 	}
 	response, err := client.Mine(context.Background(), request)
 	if err != nil {
-		grpclog.Fatalf("fail to dial: %v", err)
+		grpclog.Errorf("fail to dial: %v", err)
 	}
 	return response.GetPow(), nil
 }
@@ -97,7 +97,7 @@ func (gw *CryptoGateway) ValidateDocument(docBytes []byte, hash string, PoW int6
 	}
 	response, err := client.Validate(context.Background(), request)
 	if err != nil {
-		grpclog.Fatalf("fail to dial: %v", err)
+		grpclog.Errorf("fail to dial: %v", err)
 	}
 	return response.GetValid(), nil
 }

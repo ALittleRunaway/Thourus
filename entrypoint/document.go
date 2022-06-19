@@ -1,5 +1,6 @@
 package entrypoint
 
+import "C"
 import (
 	"github.com/gin-gonic/gin"
 	"mime/multipart"
@@ -20,6 +21,7 @@ func UploadNewDocument(documentUc *usecase.DocumentUseCase, mailUc *usecase.Mail
 		})
 		return
 	}
+
 	userUid, err := ctx.Request.Cookie("user_uid")
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
@@ -27,16 +29,16 @@ func UploadNewDocument(documentUc *usecase.DocumentUseCase, mailUc *usecase.Mail
 		})
 		return
 	}
-	//projectUid, err := ctx.Request.Cookie("project_uid")
-	//if err != nil {
-	//	ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-	//		"message": "Unable to get project uid",
-	//	})
-	//	return
-	//}
-	projectUid := "b8c2c6850b32"
 
-	err = documentUc.UploadNewDocument(file, userUid.Value, projectUid)
+	projectUid, err := ctx.Request.Cookie("project_uid")
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "Unable to get project uid",
+		})
+		return
+	}
+
+	err = documentUc.UploadNewDocument(file, userUid.Value, projectUid.Value)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
@@ -49,7 +51,6 @@ func UploadNewDocument(documentUc *usecase.DocumentUseCase, mailUc *usecase.Mail
 		return
 	}
 	// TODO: add hierarchy
-	// File saved successfully. Return proper result
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Your file has been successfully uploaded.",
 	})
@@ -74,4 +75,18 @@ func DeleteDocument(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {
 
 func AddDocument(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "add_document.html", struct{}{})
+}
+
+func DownloadDocument(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {
+	documentUid := ctx.Param("uid")
+
+	document, err := documentUc.DownloadDocument(documentUid)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.FileAttachment(document.Path, document.Name)
 }

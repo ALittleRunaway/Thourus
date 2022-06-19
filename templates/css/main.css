@@ -1,3 +1,21 @@
 .h1 {
     background-color: #0a53be;
 }
+
+.my-primary{
+    color: #4d1292;
+    background-color: #4d1292;
+}
+
+.my-primary:focus, .my-primary:hover{
+    color: #4d1292 ;
+    background-color: #4d1292;
+}
+
+a.my-btn-brand {
+    color: #4d1292 ;
+}
+
+.my-btn-brand:hover{
+    color: #4d1292;
+}

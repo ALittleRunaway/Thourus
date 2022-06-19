@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 )
 
 type StorageGw interface {
 	SaveDocument(path string, bytes []byte) error
+	ChangeRights() error
 }
 
 type StorageGateway struct {
@@ -29,6 +31,17 @@ func (gw *StorageGateway) SaveDocument(path string, bytes []byte) error {
 			fmt.Println(err)
 			return err
 		}
+	}
+	return nil
+}
+
+func (gw *StorageGateway) ChangeRights() error {
+
+	cmd := exec.Command("chmod", "-R", "777", "./storage")
+	_, err := cmd.Output()
+
+	if err != nil {
+		return err
 	}
 	return nil
 }

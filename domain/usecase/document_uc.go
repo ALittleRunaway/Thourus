@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"mime/multipart"
+	"thourus-api/domain/entity"
 	"thourus-api/gateway"
 )
 
@@ -31,6 +32,14 @@ func NewDocumentUseCase(documentGw gateway.DocumentGw, storageGw gateway.Storage
 	}
 }
 
+func (uc *DocumentUseCase) DownloadDocument(documentUid string) (entity.Document, error) {
+	document, err := uc.documentGw.GetDocumentByUid(context.Background(), documentUid)
+	if err != nil {
+		return entity.Document{}, err
+	}
+	return document, nil
+}
+
 func (uc *DocumentUseCase) UploadNewDocument(fileHeader *multipart.FileHeader, userUid string, projectUid string) error {
 	newFileName := fileHeader.Filename
 	path := fmt.Sprintf("./storage/%s", newFileName)
@@ -45,6 +54,11 @@ func (uc *DocumentUseCase) UploadNewDocument(fileHeader *multipart.FileHeader, u
 	}
 
 	err = uc.storageGw.SaveDocument(path, buf.Bytes())
+	if err != nil {
+		return err
+	}
+
+	err = uc.storageGw.ChangeRights()
 	if err != nil {
 		return err
 	}
@@ -73,10 +87,10 @@ func (uc *DocumentUseCase) UploadNewDocument(fileHeader *multipart.FileHeader, u
 	if err != nil {
 		return err
 	}
-	fmt.Println(docHistoryId)
+	uc.logger.Debug(docHistoryId)
 
 	byteContainer, err := ioutil.ReadAll(file) // why the long names though?
-	fmt.Printf("size:%d", len(byteContainer))
+	uc.logger.Debug("size:%d", len(byteContainer))
 	return nil
 
 }

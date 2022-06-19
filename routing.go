@@ -40,6 +40,7 @@ func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn 
 		apiRoute.GET("/ping", func(ctx *gin.Context) { ctx.JSON(200, gin.H{"message": "pong"}) })
 		apiRoute.POST("/document/upload", func(ctx *gin.Context) { entrypoint.UploadNewDocument(documentUc, mailUc, ctx) })
 		apiRoute.GET("/document/:uid/delete", func(ctx *gin.Context) { entrypoint.DeleteDocument(documentUc, ctx) })
+		apiRoute.GET("/document/:uid/download", func(ctx *gin.Context) { entrypoint.DownloadDocument(documentUc, ctx) })
 		apiRoute.GET("/login/", func(ctx *gin.Context) { entrypoint.LoginUser(userUc, ctx) })
 	}
 
