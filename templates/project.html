@@ -8,7 +8,7 @@
                 project
             </div>
             <div class="text-end pl-5">
-                <a type="button" href="/view/document/add" class="btn btn-light">Add document</a>
+                <a type="button" id="add_document_btn" href="/view/document/add" class="btn btn-light">Add document</a>
             </div>
         </div>
     </div>
@@ -28,10 +28,10 @@
                         <p class="card-text">Document in <b>{{ .Project.Name}}</b> project</p>
                         <p class="card-text"><b>Status: </b>Stable</p>
                         <p class="card-text"><b>Creator: </b>Maria Petrova</p>
-                        <a class="btn btn-light m-1 w-auto" onclick="DownloadDocument('{{ .Uid}}')">Update</a>
+                        <a class="btn btn-light m-1 w-auto" name="update_document_btn" onclick="DownloadDocument('{{ .Uid}}')">Update</a>
                         <a class="btn btn-outline-light m-1 w-auto" onclick="DownloadDocument('{{ .Uid}}')">Download</a>
                         <a class="btn btn-outline-light m-1 w-auto" onclick="DownloadDocument('{{ .Uid}}')">History</a>
-                        <a class="btn btn-dark w-auto" onclick="DeleteDocument('{{ .Uid}}')">Delete</a>
+                        <a class="btn btn-dark w-auto" name="delete_document_btn" onclick="DeleteDocument('{{ .Uid}}')">Delete</a>
                     </div>
                 </div>
             </div>
@@ -41,6 +41,41 @@
     </div>
 </div>
 <script>
+
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)===' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+
+    function hideButtons() {
+        let userRole = getCookie("user_role")
+
+        let deleteDocumentBtns = document.getElementsByName("delete_document_btn")
+        deleteDocumentBtns.forEach(function(item, i, deleteDocumentBtns) {
+            if (userRole === "employee") {
+                item.hidden = true
+            }
+        });
+
+        let updateDocumentBtns = document.getElementsByName("update_document_btn")
+        updateDocumentBtns.forEach(function(item, i, updateDocumentBtns) {
+            if (userRole === "employee") {
+                item.hidden = true
+            }
+        });
+
+        let addDocumentBtn = document.getElementById("add_document_btn")
+        if (userRole === "employee") {
+            addDocumentBtn.hidden = true
+        }
+    }
+    hideButtons()
 
     function DeleteDocument(documentUid) {
         fetch('http://localhost:9999/api/document/' + documentUid + '/delete').then(function(response) {

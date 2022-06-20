@@ -8,7 +8,7 @@
                 company
             </div>
             <div class="text-end pl-5">
-                <a type="button" onclick="addSpace()" class="btn btn-light">Add space</a>
+                <a type="button" id="add_space_btn" onclick="addSpace()" class="btn btn-light">Add space</a>
             </div>
         </div>
     </div>
@@ -27,7 +27,7 @@
                         <h3 class="card-title">{{ .Name}}</h3>
                         <p class="card-text">Space in <b>{{ .Company.Name}}</b> company</p>
                         <a href="/view/space/{{ .Uid}}" onclick="SaveCurrentSpaceToCookie('{{ .Uid}}')" class="btn btn-light">Go to {{ .Name}} space</a>
-                        <a class="btn btn-dark" onclick="deleteSpace('{{ .Uid}}', '{{ .Name}}')">Delete space</a>
+                        <a class="btn btn-dark" name="delete_space_btn" onclick="deleteSpace('{{ .Uid}}', '{{ .Name}}')">Delete space</a>
                     </div>
                 </div>
             </div>
@@ -38,6 +38,17 @@
 </div>
 
 <script defer>
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)===' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+
     function setCookie(name,value,days) {
         var expires = "";
         if (days) {
@@ -53,6 +64,23 @@
     }
 
     eraseCookie("space_uid")
+
+    function hideButtons() {
+        let userRole = getCookie("user_role")
+
+        let deleteSpaceBtns = document.getElementsByName("delete_space_btn")
+        deleteSpaceBtns.forEach(function(item, i, deleteSpaceBtns) {
+            if ((userRole === "manager") || (userRole === "employee")) {
+                item.hidden = true
+            }
+        });
+
+        let addSpaceBtn = document.getElementById("add_space_btn")
+        if (userRole === "employee") {
+            addSpaceBtn.hidden = true
+        }
+    }
+    hideButtons()
 
     function SaveCurrentSpaceToCookie(spaceUid) {
         setCookie("space_uid", spaceUid, 7)
