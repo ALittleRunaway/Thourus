@@ -96,9 +96,20 @@ func (uc *DocumentUseCase) UploadNewDocument(fileHeader *multipart.FileHeader, u
 }
 
 func (uc *DocumentUseCase) DeleteDocument(documentUid string) error {
-	err := uc.documentGw.DeleteDocumentByUid(context.Background(), documentUid)
+	document, err := uc.documentGw.GetDocumentByUid(context.Background(), documentUid)
 	if err != nil {
 		return err
 	}
+
+	err = uc.storageGw.DeleteDocument(document.Path)
+	if err != nil {
+		return err
+	}
+
+	err = uc.documentGw.DeleteDocumentByUid(context.Background(), documentUid)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

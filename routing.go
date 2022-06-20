@@ -31,16 +31,24 @@ func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn 
 	companyUc := usecase.NewCompanyUseCase(companyGw, appLogger)
 	documentUc := usecase.NewDocumentUseCase(documentGw, storageGw, cryptoGw, userGw, projectGw, appLogger)
 	userUc := usecase.NewUserUseCase(userGw, appLogger)
-	spaceUc := usecase.NewSpaceUseCase(spaceGw, appLogger)
-	projectUc := usecase.NewProjectUseCase(projectGw, appLogger)
+	spaceUc := usecase.NewSpaceUseCase(spaceGw, projectGw, documentGw, appLogger)
+	projectUc := usecase.NewProjectUseCase(projectGw, documentGw, appLogger)
 	mailUc := usecase.NewMailUseCase(mailGw, appLogger)
 
 	apiRoute := server.Group("/api")
 	{
 		apiRoute.GET("/ping", func(ctx *gin.Context) { ctx.JSON(200, gin.H{"message": "pong"}) })
+
 		apiRoute.POST("/document/upload", func(ctx *gin.Context) { entrypoint.UploadNewDocument(documentUc, mailUc, ctx) })
 		apiRoute.GET("/document/:uid/delete", func(ctx *gin.Context) { entrypoint.DeleteDocument(documentUc, ctx) })
 		apiRoute.GET("/document/:uid/download", func(ctx *gin.Context) { entrypoint.DownloadDocument(documentUc, ctx) })
+
+		apiRoute.GET("/space/:uid/delete", func(ctx *gin.Context) { entrypoint.DeleteSpace(spaceUc, ctx) })
+		apiRoute.GET("/space/add", func(ctx *gin.Context) { entrypoint.AddSpace(spaceUc, companyUc, ctx) })
+
+		apiRoute.GET("/project/:uid/delete", func(ctx *gin.Context) { entrypoint.DeleteProject(projectUc, ctx) })
+		apiRoute.GET("/project/add", func(ctx *gin.Context) { entrypoint.AddProject(projectUc, spaceUc, ctx) })
+
 		apiRoute.GET("/login/", func(ctx *gin.Context) { entrypoint.LoginUser(userUc, ctx) })
 	}
 

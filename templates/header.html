@@ -87,8 +87,8 @@
         </ul>
 
         <div class="text-end">
-          <a type="button" href="/view/login" class="btn mt-3 btn-outline-light me-2">Login</a>
-          <a type="button" href="/view/login" class="btn mt-3 btn-light">Sign-up</a>
+          <input id="user_info" type="text" class="btn mt-3 btn-outline-light me-2" size="30" readonly value="">
+          <a type="button" class="btn mt-3 btn-light" onclick="SignOutRedirect()">Sign out</a>
         </div>
       </div>
     </div>
@@ -96,5 +96,33 @@
 
 </main>
     <script src="bootstrap.bundle.min.js"></script>
+    <script defer>
+
+      function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+          var c = ca[i];
+          while (c.charAt(0)===' ') c = c.substring(1,c.length);
+          if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+      }
+
+      let userName = getCookie("user_name")
+      let userRole = getCookie("user_role")
+      let userInfo = document.getElementById("user_info")
+      let useInfoInputSize = userName.length + userRole.length + 3
+      userInfo.size = useInfoInputSize
+      userInfo.value = userName + " | " + userRole
+
+      function SignOutRedirect() {
+        let result = confirm("Are you sure you want to sign out?");
+        if (result) {
+          window.location = "http://localhost:9999/view/login";
+        } else {}
+      }
+
+    </script>
   </body>
 </html>

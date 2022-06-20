@@ -11,6 +11,7 @@ import (
 type StorageGw interface {
 	SaveDocument(path string, bytes []byte) error
 	ChangeRights() error
+	DeleteDocument(path string) error
 }
 
 type StorageGateway struct {
@@ -46,14 +47,12 @@ func (gw *StorageGateway) ChangeRights() error {
 	return nil
 }
 
-func (gw *StorageGateway) DownloadDocument() error {
-	return nil
-}
-
 func (gw *StorageGateway) DeleteDocument(path string) error {
 	err := os.Remove(path)
+
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

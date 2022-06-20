@@ -8,7 +8,7 @@
                 space
             </div>
             <div class="text-end pl-5">
-                <a type="button" href="/view/login" class="btn btn-light">Add project</a>
+                <a type="button" onclick="addProject()" class="btn btn-light">Add project</a>
             </div>
         </div>
     </div>
@@ -19,14 +19,15 @@
         <div class="row">
             {{ range .projects}}
             <div class="col-md-4">
-                <div class="card">
+                <div class="card m-2">
                     <div class="card-header bg-dark text-light">
                         Project
                     </div>
                     <div class="card-body bg-secondary">
                         <h3 class="card-title">{{ .Name}}</h3>
                         <p class="card-text">Project in <b>{{ .Space.Name}}</b> space</p>
-                        <a href="/view/project/{{ .Uid}}" class="btn btn-dark" onclick="SaveCurrentProjectToCookie('{{ .Uid}}')">Go to {{ .Name}} project</a>
+                        <a href="/view/project/{{ .Uid}}" class="btn btn-light" onclick="SaveCurrentProjectToCookie('{{ .Uid}}')">Go to {{ .Name}} project</a>
+                        <a class="btn btn-dark" onclick="deleteProject('{{ .Uid}}', '{{ .Name}}')">Delete project</a>
                     </div>
                 </div>
             </div>
@@ -56,6 +57,38 @@
     function SaveCurrentProjectToCookie(projectUid) {
         setCookie("project_uid", projectUid, 7)
     }
+
+     function addProject() {
+         let projectName = prompt("Enter the new space' name:")
+
+         if (projectName === "") {
+             alert("There are no project name provided!")
+
+         } else if (projectName) {
+             fetch('http://localhost:9999/api/project/add?project_name=' + projectName).then(function(response) {
+                 if ( response.status === 200 || response.status === 201) {
+                     alert("The project '" + projectName + "' was added successfully!")
+                     window.location.reload()
+                 } else {
+                     alert("The project '" + projectName + "' was not added due to an error")
+                 }
+             });
+         } else { }
+     }
+
+     function deleteProject(projectUid, projectName) {
+         let result = confirm("Are you sure you want to delete '" + projectName + "' project?");
+         if (result) {
+             fetch('http://localhost:9999/api/project/' + projectUid + '/delete').then(function(response) {
+                 if ( response.status === 200 || response.status === 201) {
+                     alert("The project '" + projectName + "' was deleted successfully!")
+                     window.location.reload()
+                 } else {
+                     alert("The project '" + projectName + "' was not deleted due to an error")
+                 }
+             });
+         } else { }
+     }
 </script>
 
 {{ template "footer.html" }}

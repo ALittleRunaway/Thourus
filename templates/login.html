@@ -78,7 +78,7 @@
       <input type="text" class="form-control" id="floatingInput" placeholder="name@example.com">
       <label for="floatingInput">Login</label>
     </div>
-    <div class="form-floating">
+    <div class="form-floating mt-2">
       <input type="password" class="form-control" id="floatingPassword" placeholder="Password">
       <label for="floatingPassword">Password</label>
     </div>
@@ -88,7 +88,14 @@
   </form>
 </main>
 
-    <script>
+    <script defer>
+
+      function eraseCookie(name) {
+        document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      }
+
+      eraseCookie("company_uid")
+
       function setCookie(name,value,days) {
         var expires = "";
         if (days) {
@@ -116,12 +123,18 @@
         xmlHttp.send()
         companyUid = JSON.parse(xmlHttp.responseText)["company"]["uid"]
         userUid = JSON.parse(xmlHttp.responseText)["uid"]
+        userName = JSON.parse(xmlHttp.responseText)["name"] + " " + JSON.parse(xmlHttp.responseText)["surname"]
+        userRole = JSON.parse(xmlHttp.responseText)["role"]["name"]
+
         setCookie("user_uid", userUid, 7)
+        setCookie("user_name", userName, 7)
+        setCookie("user_role", userRole, 7)
         if (companyUid === "") {
           alert("Your password is wrong either you are not signed up!")
           return;
         }
         if (companyUid !== 0) {
+          setCookie("company_uid", companyUid, 7)
           event.preventDefault();
           window.location = "company/" + companyUid;
         } else {
