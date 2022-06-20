@@ -31,7 +31,7 @@
                         <a class="btn btn-light m-1 w-auto" name="update_document_btn" onclick="DownloadDocument('{{ .Uid}}')">Update</a>
                         <a class="btn btn-outline-light m-1 w-auto" onclick="DownloadDocument('{{ .Uid}}')">Download</a>
                         <a class="btn btn-outline-light m-1 w-auto" onclick="DownloadDocument('{{ .Uid}}')">History</a>
-                        <a class="btn btn-dark w-auto" name="delete_document_btn" onclick="DeleteDocument('{{ .Uid}}')">Delete</a>
+                        <a class="btn btn-dark w-auto" name="delete_document_btn" onclick="DeleteDocument('{{ .Uid}}', '{{ .Name}}')">Delete</a>
                     </div>
                 </div>
             </div>
@@ -77,15 +77,18 @@
     }
     hideButtons()
 
-    function DeleteDocument(documentUid) {
-        fetch('http://localhost:9999/api/document/' + documentUid + '/delete').then(function(response) {
-            if ( response.status === 200 || response.status === 201) {
-                alert("File was deleted successfully!")
-                window.location.reload()
-            } else {
-                alert("File was not deleted")
-            }
-        });
+    function DeleteDocument(documentUid, documentName) {
+        let result = confirm("Are you sure you want to delete '" + documentName + "' document?");
+        if (result) {
+            fetch('http://localhost:9999/api/document/' + documentUid + '/delete').then(function(response) {
+                if ( response.status === 200 || response.status === 201) {
+                    alert("The document '" + documentName + "' was deleted successfully!")
+                    window.location.reload()
+                } else {
+                    alert("The document '" + documentName + "' was not deleted due to an error")
+                }
+            });
+        } else { }
     }
 
     function DownloadDocument(documentUid) {
