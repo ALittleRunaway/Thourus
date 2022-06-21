@@ -9,6 +9,7 @@
             </div>
             <div class="text-end pl-5">
                 <a type="button" onclick="addProject()" id="add_project_btn" class="btn btn-light">Add project</a>
+                <a type="button" class="btn btn-secondary mx-2" onclick="BackToCompany()">Back to company</a>
             </div>
         </div>
     </div>
@@ -27,7 +28,7 @@
                         <h3 class="card-title">{{ .Name}}</h3>
                         <p class="card-text">Project in <b>{{ .Space.Name}}</b> space</p>
                         <a href="/view/project/{{ .Uid}}" class="btn btn-light" onclick="SaveCurrentProjectToCookie('{{ .Uid}}')">Go to {{ .Name}} project</a>
-                        <a class="btn btn-dark" name="delete_project_btn" onclick="deleteProject('{{ .Uid}}', '{{ .Name}}')">Delete project</a>
+                        <a class="btn btn-dark mx-2" name="delete_project_btn" onclick="deleteProject('{{ .Uid}}', '{{ .Name}}')">Delete project</a>
                     </div>
                 </div>
             </div>
@@ -117,6 +118,11 @@
              });
          } else { }
      }
+
+    function BackToCompany() {
+        let companyUid = getCookie("company_uid")
+        window.location = "http://localhost:9999/view/company/" + companyUid
+    }
 </script>
 
 {{ template "footer.html" }}

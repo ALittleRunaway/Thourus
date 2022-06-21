@@ -27,7 +27,7 @@
                         <h3 class="card-title">{{ .Name}}</h3>
                         <p class="card-text">Space in <b>{{ .Company.Name}}</b> company</p>
                         <a href="/view/space/{{ .Uid}}" onclick="SaveCurrentSpaceToCookie('{{ .Uid}}')" class="btn btn-light">Go to {{ .Name}} space</a>
-                        <a class="btn btn-dark" name="delete_space_btn" onclick="deleteSpace('{{ .Uid}}', '{{ .Name}}')">Delete space</a>
+                        <a class="btn btn-dark mx-2" name="delete_space_btn" onclick="deleteSpace('{{ .Uid}}', '{{ .Name}}')">Delete space</a>
                     </div>
                 </div>
             </div>
