@@ -113,3 +113,16 @@ func (uc *DocumentUseCase) DeleteDocument(documentUid string) error {
 
 	return nil
 }
+
+func (uc *DocumentUseCase) GetDocumentHistory(documentUid string) ([]entity.DocumentHistory, error) {
+	document, err := uc.documentGw.GetDocumentByUid(context.Background(), documentUid)
+	if err != nil {
+		return []entity.DocumentHistory{}, err
+	}
+
+	historyRows, err := uc.documentGw.GetDocumentHistory(context.Background(), document.Id)
+	if err != nil {
+		return []entity.DocumentHistory{}, err
+	}
+	return historyRows, nil
+}

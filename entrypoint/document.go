@@ -77,6 +77,30 @@ func AddDocument(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "add_document.html", struct{}{})
 }
 
+func ShowHistory(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {
+	documentUid := ctx.Param("uid")
+
+	documentHistoryRows, err := documentUc.GetDocumentHistory(documentUid)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err}.Error())
+	}
+
+	var emptyMessage string
+	if len(documentHistoryRows) != 0 {
+		emptyMessage = ""
+	} else {
+		emptyMessage = "There are no history about this document"
+	}
+
+	data := gin.H{
+		"history":      documentHistoryRows,
+		"emptyMessage": emptyMessage,
+		"document":     documentHistoryRows[0].Document,
+	}
+
+	ctx.HTML(http.StatusOK, "history.html", data)
+}
+
 func DownloadDocument(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {
 	documentUid := ctx.Param("uid")
 

@@ -6,6 +6,10 @@ import (
 	"thourus-api/domain/entity"
 )
 
+const (
+	dateFormat = "Mon, 02 Jan 2006 15:04:05"
+)
+
 type DocumentGw interface {
 	GetDocumentById(ctx context.Context, documentId int) (entity.Document, error)
 	GetDocumentByUid(ctx context.Context, documentUid string) (entity.Document, error)
@@ -15,6 +19,7 @@ type DocumentGw interface {
 	RenameDocumentByUid(ctx context.Context, newProjectName string, documentUid string) error
 	DeleteDocumentById(ctx context.Context, documentId int) error
 	DeleteDocumentByUid(ctx context.Context, documentUid string) error
+	GetDocumentHistory(ctx context.Context, documentId int) ([]entity.DocumentHistory, error)
 }
 
 type DocumentGateway struct {
@@ -143,6 +148,48 @@ func (gw *DocumentGateway) AddDocumentHistory(ctx context.Context, documentId in
 	createdDocumentHistoryId = int(createdProjectId64)
 
 	return createdDocumentHistoryId, nil
+}
+
+func (gw *DocumentGateway) GetDocumentHistory(ctx context.Context, documentId int) ([]entity.DocumentHistory, error) {
+
+	const query = `
+	SELECT h.id, h.uid, h.document_id, d.uid, d.name, d.status_id, 
+		   s.name, h.hash, h.pow, h.initiator_id, u.name, u.surname, h.date_changed
+	FROM thourus.history h
+	INNER JOIN thourus.user u ON h.initiator_id = u.id
+	INNER JOIN thourus.document d ON h.document_id = d.id
+	INNER JOIN thourus.status s ON d.status_id = s.id
+	WHERE d.id = ?;
+`
+	historyRows := []entity.DocumentHistory{}
+
+	rows, err := gw.db.QueryContext(ctx, query, documentId)
+
+	for rows.Next() {
+		history := entity.DocumentHistory{}
+		if err = rows.Scan(
+			&history.Id,
+			&history.Uid,
+			&history.Document.Id,
+			&history.Document.Uid,
+			&history.Document.Name,
+			&history.Document.Status.Id,
+			&history.Document.Status.Name,
+			&history.Hash,
+			&history.PoW,
+			&history.Initiator.Id,
+			&history.Initiator.Name,
+			&history.Initiator.Surname,
+			&history.DateChanged,
+		); err != nil {
+			return historyRows, err
+		}
+
+		history.DateChangedString = history.DateChanged.Format(dateFormat)
+		historyRows = append(historyRows, history)
+	}
+
+	return historyRows, nil
 }
 
 func (gw *DocumentGateway) RenameDocumentById(ctx context.Context, newDocumentName string, documentId int) error {

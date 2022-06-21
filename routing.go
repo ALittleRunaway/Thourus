@@ -59,6 +59,7 @@ func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn 
 		viewRoute.GET("/space/:uid", func(ctx *gin.Context) { entrypoint.GetProjectsInSpace(spaceUc, ctx) })
 		viewRoute.GET("/project/:uid", func(ctx *gin.Context) { entrypoint.GetDocumentsInProject(projectUc, ctx) })
 		viewRoute.GET("/document/add", func(ctx *gin.Context) { entrypoint.AddDocument(ctx) })
+		viewRoute.GET("/document/:uid/history", func(ctx *gin.Context) { entrypoint.ShowHistory(documentUc, ctx) })
 	}
 
 	go func() {

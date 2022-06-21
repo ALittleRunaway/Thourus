@@ -31,7 +31,7 @@
                         <p class="card-text"><b>Creator: </b>Maria Petrova</p>
                         <a class="btn btn-light m-1 w-auto" name="update_document_btn" onclick="DownloadDocument('{{ .Uid}}')">Update</a>
                         <a class="btn btn-outline-light m-1 w-auto" onclick="DownloadDocument('{{ .Uid}}')">Download</a>
-                        <a class="btn btn-outline-light m-1 w-auto" onclick="DownloadDocument('{{ .Uid}}')">History</a>
+                        <a class="btn btn-outline-light m-1 w-auto" href="/view/document/{{ .Uid}}/history">History</a>
                         <a class="btn btn-dark w-auto" name="delete_document_btn" onclick="DeleteDocument('{{ .Uid}}', '{{ .Name}}')">Delete</a>
                     </div>
                 </div>
