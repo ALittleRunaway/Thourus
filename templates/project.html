@@ -26,10 +26,12 @@
                     </div>
                     <div class="card-body bg-secondary">
                         <h3 class="card-title">{{ .Name}}</h3>
-                        <p class="card-text">Document in <b>{{ .Project.Name}}</b> project</p>
-                        <p class="card-text"><b>Status: </b>Stable</p>
-                        <p class="card-text"><b>Creator: </b>Maria Petrova</p>
-                        <a class="btn btn-light m-1 w-auto" name="update_document_btn" onclick="DownloadDocument('{{ .Uid}}')">Update</a>
+                        <text class="card-text my-2">Document in <b>{{ .Project.Name}}</b> project</text><br>
+                        <text class="card-text my-2"><b>Status: </b>{{ .Status.Name}}</text><br>
+                        <text class="card-text my-2"><b>Creator: </b>{{ .Creator.Name}} {{ .Creator.Surname}}</text><br>
+                        <text class="card-text my-2"><b>Date created: </b>{{ .DateCreatedString}}</text><br>
+                        <hr class="my-2">
+                        <a class="btn btn-light m-1 w-auto " name="update_document_btn" onclick="DownloadDocument('{{ .Uid}}')">Update</a>
                         <a class="btn btn-outline-light m-1 w-auto" onclick="DownloadDocument('{{ .Uid}}')">Download</a>
                         <a class="btn btn-outline-light m-1 w-auto" href="/view/document/{{ .Uid}}/history">History</a>
                         <a class="btn btn-dark w-auto" name="delete_document_btn" onclick="DeleteDocument('{{ .Uid}}', '{{ .Name}}')">Delete</a>

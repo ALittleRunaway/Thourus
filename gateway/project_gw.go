@@ -93,12 +93,16 @@ func (gw *ProjectGateway) GetProjectByUid(ctx context.Context, projectUid string
 func (gw *ProjectGateway) GetDocumentsInProject(ctx context.Context, projectUid string) ([]entity.Document, error) {
 
 	const query = `
-	SELECT d.id, d.uid, d.name, d.path, u.uid,
+	SELECT d.id, d.uid, d.name, d.path, 
+	       u.uid, u.name, u.surname,
+		   st.id, st.uid, st.name,
 		   p.id, p.uid, p.name,
-		   s.id, s.uid, s.name
+		   s.id, s.uid, s.name,
+	       d.date_created
 	FROM thourus.document d
 	INNER JOIN thourus.project p ON d.project_id = p.id
 	INNER JOIN thourus.space s ON p.space_id = s.id
+	INNER JOIN thourus.status st ON d.status_id = st.id
 	INNER JOIN thourus.user u ON d.creator_id = u.id
 	WHERE p.uid = ?;
 `
@@ -114,15 +118,22 @@ func (gw *ProjectGateway) GetDocumentsInProject(ctx context.Context, projectUid 
 			&document.Name,
 			&document.Path,
 			&document.Creator.Uid,
+			&document.Creator.Name,
+			&document.Creator.Surname,
+			&document.Status.Id,
+			&document.Status.Uid,
+			&document.Status.Name,
 			&document.Project.Id,
 			&document.Project.Uid,
 			&document.Project.Name,
 			&document.Space.Id,
 			&document.Space.Uid,
 			&document.Space.Name,
+			&document.DateCreated,
 		); err != nil {
 			return documents, err
 		}
+		document.DateCreatedString = document.DateCreated.Format(dateFormat)
 		documents = append(documents, document)
 	}
 
