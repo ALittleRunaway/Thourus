@@ -69,15 +69,13 @@
     <!-- Custom styles for this template -->
     <link href="form-validation.css" rel="stylesheet">
   </head>
-<!--  <body class="bg-light">-->
     
 <div class="container">
   <main>
     <div class="py-5 text-center">
-<!--      <img class="d-block mx-auto mb-4" src="/templates/assets/brand/bootstrap-logo.svg" alt="" width="72" height="57">-->
       <img class="mb-4" src="/templates/assets/brand/thourus_logo.svg" alt="" width="300" >
-      <h2>Add a new document</h2>
-      <p class="lead">Here you can upload a new document. This will start a new blockchain history for this document.</p>
+      <h2>Upload a new version of a document</h2>
+      <p class="lead">Here you can upload a new version of you document. Your document won't bw changed util all the project members will approve it.</p>
     </div>
     <div class="album py-4">
       <div class="container">
@@ -120,7 +118,11 @@
 
         formData.append("file", file);
 
-        fetch('http://localhost:9999/api/document/upload', {method: "POST", body: formData}).then(function(response) {
+          const queryString = window.location.search;
+          const urlParams = new URLSearchParams(queryString);
+          const documentUid = urlParams.get('document_uid')
+
+        fetch('http://localhost:9999/api/document/' + documentUid + "/update", {method: "POST", body: formData}).then(function(response) {
 
           if ( response.status === 200 || response.status === 201) {
             alert("File was uploaded successfully!")

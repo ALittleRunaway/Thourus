@@ -27,11 +27,11 @@
                     <div class="card-body bg-secondary">
                         <h3 class="card-title">{{ .Name}}</h3>
                         <text class="card-text my-2">Document in <b>{{ .Project.Name}}</b> project</text><br>
-                        <text class="card-text my-2"><b>Status: </b>{{ .Status.Name}}</text><br>
-                        <text class="card-text my-2"><b>Creator: </b>{{ .Creator.Name}} {{ .Creator.Surname}}</text><br>
+                        <text class="card-text my-2" id="status"><b>Status: </b>{{ .Status.Name}}</text><br>
+                        <text class="card-text my-2" ><b>Creator: </b>{{ .Creator.Name}} {{ .Creator.Surname}}</text><br>
                         <text class="card-text my-2"><b>Date created: </b>{{ .DateCreatedString}}</text><br>
                         <hr class="my-2">
-                        <a class="btn btn-light m-1 w-auto " name="update_document_btn" onclick="DownloadDocument('{{ .Uid}}')">Update</a>
+                        <a class="btn btn-light m-1 w-auto " name="update_document_btn" href="/view/document/update?document_uid={{ .Uid}}">Update</a>
                         <a class="btn btn-outline-light m-1 w-auto" onclick="DownloadDocument('{{ .Uid}}')">Download</a>
                         <a class="btn btn-outline-light m-1 w-auto" href="/view/document/{{ .Uid}}/history">History</a>
                         <a class="btn btn-dark w-auto" name="delete_document_btn" onclick="DeleteDocument('{{ .Uid}}', '{{ .Name}}')">Delete</a>
@@ -43,7 +43,7 @@
         </div>
     </div>
 </div>
-<script>
+<script defer>
 
     function getCookie(name) {
         var nameEQ = name + "=";
@@ -79,6 +79,18 @@
         }
     }
     hideButtons()
+
+    function SetStatusColor(){
+        let statusElement = document.getElementById("status")
+        if (statusElement.innerText === "Status: pending") {
+            statusElement.classList.remove("card-text")
+            statusElement.classList.add("text-info")
+        } else {
+            statusElement.classList.remove("text-info")
+            statusElement.classList.add("card-text")
+        }
+    }
+    SetStatusColor()
 
     function DeleteDocument(documentUid, documentName) {
         let result = confirm("Are you sure you want to delete '" + documentName + "' document?");

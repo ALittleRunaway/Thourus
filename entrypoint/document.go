@@ -46,10 +46,10 @@ func UploadNewDocument(documentUc *usecase.DocumentUseCase, mailUc *usecase.Mail
 		return
 	}
 
-	err = mailUc.SendUpdates()
-	if err != nil {
-		return
-	}
+	//err = mailUc.SendUpdates(file.Filename)
+	//if err != nil {
+	//	return
+	//}
 	// TODO: add hierarchy
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Your file has been successfully uploaded.",
@@ -73,8 +73,51 @@ func DeleteDocument(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {
 
 }
 
+func UpdateDocument(documentUc *usecase.DocumentUseCase, mailUc *usecase.MailUseCase, ctx *gin.Context) {
+	documentUid := ctx.Param("uid")
+
+	file, err := ctx.FormFile("file")
+
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "No file is received",
+		})
+		return
+	}
+
+	userUid, err := ctx.Request.Cookie("user_uid")
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": "Unable to get user uid",
+		})
+		return
+	}
+
+	err = documentUc.UpdateDocument(file, userUid.Value, documentUid)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	err = mailUc.SendUpdates(file.Filename)
+	if err != nil {
+		return
+	}
+	// TODO: add hierarchy
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Your file has been successfully uploaded.",
+	})
+
+}
+
 func AddDocument(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "add_document.html", struct{}{})
+}
+
+func UpdateDocumentView(ctx *gin.Context) {
+	ctx.HTML(http.StatusOK, "update_document.html", struct{}{})
 }
 
 func ShowHistory(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {

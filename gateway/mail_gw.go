@@ -5,7 +5,7 @@ import (
 )
 
 type MailGw interface {
-	SendUpdate() error
+	SendUpdate(filename string) error
 }
 
 type MailGateway struct {
@@ -18,8 +18,9 @@ func NewMailGateway(natsConn *nats.Conn) *MailGateway {
 	}
 }
 
-func (gw *MailGateway) SendUpdate() error {
-	err := gw.natsConn.Publish("thourus.service.mailman.document_change", []byte("{\n        \"document\": \"Contract\",\n        \"initiator\": \"Maria Petrova\",\n        \"reviewers_emails\": [\"maria_petrova@gmail.com\", \"princess_carolin@gmail.com\"],\n        \"project\": \"Thourus\",\n        \"date\": \"2022-05-01T15:04:05Z\",\n        \"comment\": \"\"\n}"))
+func (gw *MailGateway) SendUpdate(filename string) error {
+	err := gw.natsConn.Publish("thourus.service.mailman.document_change",
+		[]byte("{\n        \"document\": \"Contract\",\n        \"initiator\": \"Maria Petrova\",\n        \"reviewers_emails\": [\"maria_petrova@gmail.com\", \"princess_carolin@gmail.com\"],\n        \"project\": \"Thourus\",\n        \"date\": \"2022-05-01T15:04:05Z\",\n        \"comment\": \"\"\n}"))
 	if err != nil {
 		return err
 	}

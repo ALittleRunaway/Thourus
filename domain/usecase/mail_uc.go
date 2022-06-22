@@ -17,8 +17,8 @@ func NewMailUseCase(mailGw gateway.MailGw, logger *zap.SugaredLogger) *MailUseCa
 	}
 }
 
-func (uc *MailUseCase) SendUpdates() error {
-	err := uc.mailGw.SendUpdate()
+func (uc *MailUseCase) SendUpdates(filename string) error {
+	err := uc.mailGw.SendUpdate(filename)
 	if err != nil {
 		return err
 	}

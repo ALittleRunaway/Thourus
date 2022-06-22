@@ -20,6 +20,7 @@ type DocumentGw interface {
 	DeleteDocumentById(ctx context.Context, documentId int) error
 	DeleteDocumentByUid(ctx context.Context, documentUid string) error
 	GetDocumentHistory(ctx context.Context, documentId int) ([]entity.DocumentHistory, error)
+	ChangeDocumentStatusToPending(ctx context.Context, documentId int) error
 }
 
 type DocumentGateway struct {
@@ -198,6 +199,19 @@ func (gw *DocumentGateway) RenameDocumentById(ctx context.Context, newDocumentNa
 	UPDATE thourus.document d SET d.name = ? WHERE d.id = ?;
 `
 	_, err := gw.db.ExecContext(ctx, query, newDocumentName, documentId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (gw *DocumentGateway) ChangeDocumentStatusToPending(ctx context.Context, documentId int) error {
+
+	const query = `
+	UPDATE thourus.document d SET d.status_id = 2 WHERE d.id = ?;
+`
+	_, err := gw.db.ExecContext(ctx, query, documentId)
 	if err != nil {
 		return err
 	}

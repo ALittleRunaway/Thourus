@@ -42,6 +42,7 @@ func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn 
 		apiRoute.POST("/document/upload", func(ctx *gin.Context) { entrypoint.UploadNewDocument(documentUc, mailUc, ctx) })
 		apiRoute.GET("/document/:uid/delete", func(ctx *gin.Context) { entrypoint.DeleteDocument(documentUc, ctx) })
 		apiRoute.GET("/document/:uid/download", func(ctx *gin.Context) { entrypoint.DownloadDocument(documentUc, ctx) })
+		apiRoute.POST("/document/:uid/update", func(ctx *gin.Context) { entrypoint.UpdateDocument(documentUc, mailUc, ctx) })
 
 		apiRoute.GET("/space/:uid/delete", func(ctx *gin.Context) { entrypoint.DeleteSpace(spaceUc, ctx) })
 		apiRoute.GET("/space/add", func(ctx *gin.Context) { entrypoint.AddSpace(spaceUc, companyUc, ctx) })
@@ -59,6 +60,7 @@ func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn 
 		viewRoute.GET("/space/:uid", func(ctx *gin.Context) { entrypoint.GetProjectsInSpace(spaceUc, ctx) })
 		viewRoute.GET("/project/:uid", func(ctx *gin.Context) { entrypoint.GetDocumentsInProject(projectUc, ctx) })
 		viewRoute.GET("/document/add", func(ctx *gin.Context) { entrypoint.AddDocument(ctx) })
+		viewRoute.GET("/document/update", func(ctx *gin.Context) { entrypoint.UpdateDocumentView(ctx) })
 		viewRoute.GET("/document/:uid/history", func(ctx *gin.Context) { entrypoint.ShowHistory(documentUc, ctx) })
 	}
 
