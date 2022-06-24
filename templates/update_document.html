@@ -1,0 +1,140 @@
+{{ template "header.html" }}
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.98.0">
+    <title>Checkout example · Bootstrap v5.2</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.2/examples/checkout/">
+
+<link href="/templates/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+
+      .b-example-divider {
+        height: 3rem;
+        background-color: rgba(0, 0, 0, .1);
+        border: solid rgba(0, 0, 0, .15);
+        border-width: 1px 0;
+        box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
+      }
+
+      .b-example-vr {
+        flex-shrink: 0;
+        width: 1.5rem;
+        height: 100vh;
+      }
+
+      .bi {
+        vertical-align: -.125em;
+        fill: currentColor;
+      }
+
+      .nav-scroller {
+        position: relative;
+        z-index: 2;
+        height: 2.75rem;
+        overflow-y: hidden;
+      }
+
+      .nav-scroller .nav {
+        display: flex;
+        flex-wrap: nowrap;
+        padding-bottom: 1rem;
+        margin-top: -1px;
+        overflow-x: auto;
+        text-align: center;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+    </style>
+
+    
+    <!-- Custom styles for this template -->
+    <link href="form-validation.css" rel="stylesheet">
+  </head>
+    
+<div class="container">
+  <main>
+    <div class="py-5 text-center">
+      <img class="mb-4" src="/templates/assets/brand/thourus_logo.svg" alt="" width="300" >
+      <h2>Upload a new version of a document</h2>
+      <p class="lead">Here you can upload a new version of you document. Your document won't bw changed util all the project members will approve it.</p>
+    </div>
+    <div class="album py-4">
+      <div class="container">
+        <div class="row">
+            <div class="card">
+              <div class="card-header bg-secondary text-light">
+              </div>
+              <div class="card-body bg-light">
+
+                <h3 class="card-text">Choose a file</h3>
+                <form enctype="multipart/form-data" class="m-2">
+                  <input id="file" type="file" name="file" accept="*" />
+                </form>
+                <a type="button" class="btn btn-dark m-2" onclick="SendFile()">Upload</a>
+              </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+</div>
+    <script>
+
+      function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+          var c = ca[i];
+          while (c.charAt(0)===' ') c = c.substring(1,c.length);
+          if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+      }
+
+
+      function SendFile() {
+        let file = document.getElementById("file").files[0];
+        let formData = new FormData();
+
+        formData.append("file", file);
+
+          const queryString = window.location.search;
+          const urlParams = new URLSearchParams(queryString);
+          const documentUid = urlParams.get('document_uid')
+
+        fetch('http://localhost:9999/api/document/' + documentUid + "/update", {method: "POST", body: formData}).then(function(response) {
+
+          if ( response.status === 200 || response.status === 201) {
+            alert("File was uploaded successfully!")
+
+            let projectUid = getCookie("project_uid")
+            window.location = "http://localhost:9999/view/project/" + projectUid;
+          } else {
+            alert("File was not uploaded")
+          }
+        });
+      }
+    </script>
+
+
+{{ template "footer.html" }}

@@ -1,0 +1,128 @@
+{{ template "header.html" }}
+
+<header class="p-3 bg-dark text-white">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+            <h1 >{{ .spaceName}}</h1>
+            <div class="m-3">
+                space
+            </div>
+            <div class="text-end pl-5">
+                <a type="button" onclick="addProject()" id="add_project_btn" class="btn btn-light">Add project</a>
+                <a type="button" class="btn btn-secondary mx-2" onclick="BackToCompany()">Back to company</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="album py-4 bg-light">
+    <div class="container">
+        <div class="row">
+            {{ range .projects}}
+            <div class="col-md-4">
+                <div class="card m-2">
+                    <div class="card-header bg-dark text-light">
+                        Project
+                    </div>
+                    <div class="card-body bg-secondary">
+                        <h3 class="card-title">{{ .Name}}</h3>
+                        <p class="card-text">Project in <b>{{ .Space.Name}}</b> space</p>
+                        <a href="/view/project/{{ .Uid}}" class="btn btn-light" onclick="SaveCurrentProjectToCookie('{{ .Uid}}')">Go to {{ .Name}} project</a>
+                        <a class="btn btn-dark mx-2" name="delete_project_btn" onclick="deleteProject('{{ .Uid}}', '{{ .Name}}')">Delete project</a>
+                    </div>
+                </div>
+            </div>
+            {{ end }}
+            <h3>{{ .emptyMessage}}</h3>
+        </div>
+    </div>
+</div>
+<script defer>
+
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)===' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+
+     function setCookie(name,value,days) {
+         var expires = "";
+         if (days) {
+             var date = new Date();
+             date.setTime(date.getTime() + (days*24*60*60*1000));
+             expires = "; expires=" + date.toUTCString();
+         }
+         document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+     }
+
+     function eraseCookie(name) {
+         document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+     }
+
+    eraseCookie("project_uid")
+
+    function hideButtons() {
+        let userRole = getCookie("user_role")
+
+        let deleteProjectBtns = document.getElementsByName("delete_project_btn")
+        deleteProjectBtns.forEach(function(item, i, deleteProjectBtns) {
+            if (userRole === "employee") {
+                item.hidden = true
+            }
+        });
+
+        let addProjectBtn = document.getElementById("add_project_btn")
+        if (userRole === "employee") {
+            addProjectBtn.hidden = true
+        }
+    }
+    hideButtons()
+
+    function SaveCurrentProjectToCookie(projectUid) {
+        setCookie("project_uid", projectUid, 7)
+    }
+
+     function addProject() {
+         let projectName = prompt("Enter the new space' name:")
+
+         if (projectName === "") {
+             alert("There are no project name provided!")
+
+         } else if (projectName) {
+             fetch('http://localhost:9999/api/project/add?project_name=' + projectName).then(function(response) {
+                 if ( response.status === 200 || response.status === 201) {
+                     alert("The project '" + projectName + "' was added successfully!")
+                     window.location.reload()
+                 } else {
+                     alert("The project '" + projectName + "' was not added due to an error")
+                 }
+             });
+         } else { }
+     }
+
+     function deleteProject(projectUid, projectName) {
+         let result = confirm("Are you sure you want to delete '" + projectName + "' project?");
+         if (result) {
+             fetch('http://localhost:9999/api/project/' + projectUid + '/delete').then(function(response) {
+                 if ( response.status === 200 || response.status === 201) {
+                     alert("The project '" + projectName + "' was deleted successfully!")
+                     window.location.reload()
+                 } else {
+                     alert("The project '" + projectName + "' was not deleted due to an error")
+                 }
+             });
+         } else { }
+     }
+
+    function BackToCompany() {
+        let companyUid = getCookie("company_uid")
+        window.location = "http://localhost:9999/view/company/" + companyUid
+    }
+</script>
+
+{{ template "footer.html" }}

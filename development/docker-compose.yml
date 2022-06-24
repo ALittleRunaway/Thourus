@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  mail:
+    image: mailhog/mailhog
+    ports:
+      - 25:1025
+      - 8025:8025
+
+  redis:
+    image: bitnami/redis:latest
+    ports:
+      - 6379:6379
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+
+  nats:
+    image: nats-streaming:latest
+    ports:
+      - 4222:4222
+      - 4223:4223
+      - 6222:6222
+      - 8222:8222
+      - 8223:8223

@@ -1,0 +1,141 @@
+{{ template "header.html" }}
+
+<header class="p-3 bg-dark text-white">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+            <h1 >{{ .projectName}}</h1>
+            <div class="m-3">
+                project
+            </div>
+            <div class="text-end pl-5">
+                <a type="button" id="add_document_btn" href="/view/document/add" class="btn btn-light">Add document</a>
+                <a type="button" class="btn btn-secondary mx-2" onclick="BackToSpace()">Back to space</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="album py-4 bg-light">
+    <div class="container">
+        <div class="row">
+            {{ range .documents}}
+            <div class="col-md-4">
+                <div class="card m-2">
+                    <div class="card-header bg-dark text-light">
+                        Document
+                    </div>
+                    <div class="card-body bg-secondary">
+                        <h3 class="card-title">{{ .Name}}</h3>
+                        <text class="card-text my-2">Document in <b>{{ .Project.Name}}</b> project</text><br>
+                        <text class="card-text my-2" name="status"><b>Status: </b>{{ .Status.Name}}</text><br>
+                        <text class="card-text my-2" ><b>Creator: </b>{{ .Creator.Name}} {{ .Creator.Surname}}</text><br>
+                        <text class="card-text my-2"><b>Date created: </b>{{ .DateCreatedString}}</text><br>
+                        <hr class="my-2">
+                        <button class="btn btn-light m-1 w-auto " name="update_document_btn" onclick="UpdateDocument('{{ .Uid}}')" >Update</button>
+                        <a class="btn btn-outline-light m-1 w-auto" onclick="DownloadDocument('{{ .Uid}}')">Download</a>
+                        <a class="btn btn-outline-light m-1 w-auto" href="/view/document/{{ .Uid}}/history">History</a>
+                        <a class="btn btn-dark w-auto" name="delete_document_btn" onclick="DeleteDocument('{{ .Uid}}', '{{ .Name}}')">Delete</a>
+                    </div>
+                </div>
+            </div>
+            {{ end }}
+            <h3>{{ .emptyMessage}}</h3>
+        </div>
+    </div>
+</div>
+<script defer>
+
+    function UpdateDocument(documentUid) {
+        window.location = 'http://localhost:9999/view/document/update?document_uid=' + documentUid;
+    }
+
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)===' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+
+    function hideButtons() {
+        let userRole = getCookie("user_role")
+
+        let deleteDocumentBtns = document.getElementsByName("delete_document_btn")
+        deleteDocumentBtns.forEach(function(item, i, deleteDocumentBtns) {
+            if (userRole === "employee") {
+                item.hidden = true
+            }
+        });
+
+        let updateDocumentBtns = document.getElementsByName("update_document_btn")
+        updateDocumentBtns.forEach(function(item, i, updateDocumentBtns) {
+            if (userRole === "employee") {
+                item.hidden = true
+            }
+        });
+
+        let addDocumentBtn = document.getElementById("add_document_btn")
+        if (userRole === "employee") {
+            addDocumentBtn.hidden = true
+        }
+    }
+    hideButtons()
+
+    function SetStatusColor(){
+        let statusElements = document.getElementsByName("status")
+        let updateDocumentBtns = document.getElementsByName("update_document_btn")
+
+        for (let i = 0; i < statusElements.length; i++) {
+            if (statusElements[i].innerText === "Status: pending") {
+
+                statusElements[i].classList.remove("card-text")
+                statusElements[i].classList.add("text-info")
+                updateDocumentBtns[i].disabled = true
+            } else {
+                statusElements[i].classList.remove("text-info")
+                statusElements[i].classList.add("card-text")
+                updateDocumentBtns[i].disabled = false
+            }
+        }
+
+    }
+    SetStatusColor()
+
+    function DeleteDocument(documentUid, documentName) {
+        let result = confirm("Are you sure you want to delete '" + documentName + "' document?");
+        if (result) {
+            fetch('http://localhost:9999/api/document/' + documentUid + '/delete').then(function(response) {
+                if ( response.status === 200 || response.status === 201) {
+                    alert("The document '" + documentName + "' was deleted successfully!")
+                    window.location.reload()
+                } else {
+                    alert("The document '" + documentName + "' was not deleted due to an error")
+                }
+            });
+        } else { }
+    }
+
+    function DownloadDocument(documentUid) {
+        downloadUrl = 'http://localhost:9999/api/document/' + documentUid + '/download';
+        fetch(downloadUrl).then(function(response) {
+            if ( response.status === 200 || response.status === 201) {
+                window.location.assign(downloadUrl);
+            } else if  ( response.status === 404) {
+                alert("File was not found")
+            }
+            else {
+                alert("File was not downloaded due to en error")
+            }
+        });
+    }
+
+    function BackToSpace() {
+        let spaceUid = getCookie("space_uid")
+        window.location = "http://localhost:9999/view/space/" + spaceUid
+    }
+</script>
+
+{{ template "footer.html" }}

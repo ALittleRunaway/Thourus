@@ -1,0 +1,103 @@
+{{ template "header.html" }}
+
+<header class="p-3 bg-dark text-white">
+  <div class="container">
+    <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+      <h1 >{{ .document.Name}}</h1>
+      <div class="m-3">
+        document
+      </div>
+      <div class="text-end pl-5">
+        <a type="button" class="btn btn-secondary mx-2" onclick="BackToProject()">Back to project view</a>
+        <a type="button" class="btn btn-info mx-2" id="pending_button" onclick="DownloadDocument('{{ .document.Uid}}', '{{ .documentVersion}}')">Download pending version v{{ .documentVersion}}</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<head>
+    <link href="/templates/css/grid.css" rel="stylesheet">
+  <title>History</title>
+</head>
+
+<main>
+  <div class="container" id="containers">
+
+    <h2 class="mt-4">{{ .document.Name}}</h2>
+
+    <p class="lead" id="status"><b>Status: </b>{{ .document.Status.Name}}</p>
+
+    <h3>Proof of work (PoW)</h3>
+    <p> is a form of cryptographic proof in which one party (the prover) proves to others (the verifiers) that a certain amount of a specific computational effort has been expended. Verifiers can subsequently confirm this expenditure with minimal effort on their part. The concept was invented by Moni Naor and Cynthia Dwork in 1993 as a way to deter denial-of-service attacks and other service abuses such as spam on a network by requiring some work from a service requester, usually meaning processing time by a computer. </p>
+
+    <h3>Hash</h3>
+    <p>A hash is a mathematical function that converts an input of arbitrary length into an encrypted output of a fixed length. Thus regardless of the original amount of data or file size involved, its unique hash will always be the same size.</p>
+    <hr class="my-4">
+
+    <h2 class="mt-4">The history of a document</h2>
+    <p>Here you can see the history of a document. Every transaction is being shown here.</p>
+    <div class="row mb-3">
+      <div class="col-md-1 themed-grid-col"><b>PoW</b></div>
+      <div class="col-md-6 themed-grid-col"><b>Hash</b></div>
+      <div class="col-md-2 themed-grid-col"><b>Initiator name</b></div>
+      <div class="col-md-3 themed-grid-col"><b>Date changed</b></div>
+    </div>
+    {{ range .history}}
+      <div class="row mb-1">
+        <div class="col-md-1 themed-grid-col">{{ .PoW}}</div>
+        <div class="col-md-6 themed-grid-col">{{ .Hash}}</div>
+        <div class="col-md-2 themed-grid-col">{{ .Initiator.Name}} {{.Initiator.Surname}}</div>
+        <div class="col-md-3 themed-grid-col">{{ .DateChangedString}}</div>
+      </div>
+    {{ end }}
+
+  </div>
+
+    <hr class="my-4">
+
+</main>
+
+<script defer>
+  function getCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for(var i=0;i < ca.length;i++) {
+      var c = ca[i];
+      while (c.charAt(0)===' ') c = c.substring(1,c.length);
+      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length,c.length);
+    }
+    return null;
+  }
+
+
+  function HidePendingButton() {
+      let pendingButton = document.getElementById("pending_button")
+      let status = document.getElementById("status")
+      if (status.innerText === "Status: stable") {
+          pendingButton.hidden = true
+      }
+  }
+  HidePendingButton()
+
+  function BackToProject() {
+        let projectUid = getCookie("project_uid")
+        window.location = "http://localhost:9999/view/project/" + projectUid
+    }
+
+  function DownloadDocument(documentUid, version) {
+    downloadUrl = 'http://localhost:9999/api/document/' + documentUid + '/download?version=' + version;
+    fetch(downloadUrl).then(function(response) {
+      if ( response.status === 200 || response.status === 201) {
+        window.location.assign(downloadUrl);
+      } else if  ( response.status === 404) {
+        alert("File was not found")
+      }
+      else {
+        alert("File was not downloaded due to en error")
+      }
+    });
+  }
+
+</script>
+
+{{ template "footer.html" }}
