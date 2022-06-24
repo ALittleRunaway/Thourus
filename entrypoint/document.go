@@ -2,9 +2,11 @@ package entrypoint
 
 import "C"
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"mime/multipart"
 	"net/http"
+	"strings"
 	"thourus-api/domain/usecase"
 )
 
@@ -12,7 +14,7 @@ type BindFile struct {
 	File *multipart.FileHeader `form:"file" binding:"required"`
 }
 
-func UploadNewDocument(documentUc *usecase.DocumentUseCase, mailUc *usecase.MailUseCase, ctx *gin.Context) {
+func UploadNewDocument(documentUc *usecase.DocumentUseCase, mailUc *usecase.MailUseCase, cacheUc *usecase.CacheUseCase, ctx *gin.Context) {
 	file, err := ctx.FormFile("file")
 
 	if err != nil {
@@ -38,7 +40,15 @@ func UploadNewDocument(documentUc *usecase.DocumentUseCase, mailUc *usecase.Mail
 		return
 	}
 
-	err = documentUc.UploadNewDocument(file, userUid.Value, projectUid.Value)
+	document, err := documentUc.UploadNewDocument(file, userUid.Value, projectUid.Value)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	err = cacheUc.SaveDocumentVersion(document.Uid, "1")
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
@@ -73,7 +83,7 @@ func DeleteDocument(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {
 
 }
 
-func UpdateDocument(documentUc *usecase.DocumentUseCase, mailUc *usecase.MailUseCase, ctx *gin.Context) {
+func UpdateDocument(documentUc *usecase.DocumentUseCase, mailUc *usecase.MailUseCase, cacheUc *usecase.CacheUseCase, ctx *gin.Context) {
 	documentUid := ctx.Param("uid")
 
 	file, err := ctx.FormFile("file")
@@ -93,7 +103,23 @@ func UpdateDocument(documentUc *usecase.DocumentUseCase, mailUc *usecase.MailUse
 		return
 	}
 
-	err = documentUc.UpdateDocument(file, userUid.Value, documentUid)
+	version, err := cacheUc.GetDocumentVersion(documentUid)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	err = documentUc.UpdateDocument(file, userUid.Value, documentUid, version)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	err = cacheUc.IncrementDocumentVersion(documentUid)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
@@ -120,10 +146,14 @@ func UpdateDocumentView(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "update_document.html", struct{}{})
 }
 
-func ShowHistory(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {
+func ShowHistory(documentUc *usecase.DocumentUseCase, cacheUC *usecase.CacheUseCase, ctx *gin.Context) {
 	documentUid := ctx.Param("uid")
 
 	documentHistoryRows, err := documentUc.GetDocumentHistory(documentUid)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err}.Error())
+	}
+	documentVersion, err := cacheUC.GetDocumentVersion(documentUid)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.Error{Err: err}.Error())
 	}
@@ -136,9 +166,10 @@ func ShowHistory(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {
 	}
 
 	data := gin.H{
-		"history":      documentHistoryRows,
-		"emptyMessage": emptyMessage,
-		"document":     documentHistoryRows[0].Document,
+		"history":         documentHistoryRows,
+		"emptyMessage":    emptyMessage,
+		"document":        documentHistoryRows[0].Document,
+		"documentVersion": documentVersion,
 	}
 
 	ctx.HTML(http.StatusOK, "history.html", data)
@@ -146,6 +177,7 @@ func ShowHistory(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {
 
 func DownloadDocument(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {
 	documentUid := ctx.Param("uid")
+	version := ctx.Query("version")
 
 	document, err := documentUc.DownloadDocument(documentUid)
 	if err != nil {
@@ -155,5 +187,13 @@ func DownloadDocument(documentUc *usecase.DocumentUseCase, ctx *gin.Context) {
 		return
 	}
 
-	ctx.FileAttachment(document.Path, document.Name)
+	var path string
+	if version != "" {
+		nameExtention := strings.Split(document.Name, ".")
+		path = fmt.Sprintf("%s-v%v.%s", nameExtention[0], version, nameExtention[1])
+	} else {
+		path = document.Name
+	}
+
+	ctx.FileAttachment(document.Path, path)
 }

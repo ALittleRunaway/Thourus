@@ -16,6 +16,7 @@ type Config struct {
 	Grpc   *GrpcConfig
 	Crypto *CryptoConfig
 	Nats   *NatsConfig
+	Redis  *RedisConfig
 	DB     *DBConfig
 }
 
@@ -32,6 +33,7 @@ func InitConfig() *Config {
 		Grpc:   InitGrpcConfig(),
 		Crypto: InitCryptoConfig(),
 		Nats:   InitNatsConfig(),
+		Redis:  InitRedisConfig(),
 		DB:     InitDBConfig(),
 	}
 }

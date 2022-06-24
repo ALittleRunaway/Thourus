@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"mime/multipart"
+	"strings"
 	"thourus-api/domain/entity"
 	"thourus-api/gateway"
 )
@@ -32,16 +33,6 @@ func NewDocumentUseCase(documentGw gateway.DocumentGw, storageGw gateway.Storage
 	}
 }
 
-func incrementer() func() int {
-	i := 2
-	return func() int {
-		i++
-		return i
-	}
-}
-
-var increment = incrementer()
-
 func (uc *DocumentUseCase) DownloadDocument(documentUid string) (entity.Document, error) {
 	document, err := uc.documentGw.GetDocumentByUid(context.Background(), documentUid)
 	if err != nil {
@@ -50,68 +41,75 @@ func (uc *DocumentUseCase) DownloadDocument(documentUid string) (entity.Document
 	return document, nil
 }
 
-func (uc *DocumentUseCase) UploadNewDocument(fileHeader *multipart.FileHeader, userUid string, projectUid string) error {
+func (uc *DocumentUseCase) UploadNewDocument(fileHeader *multipart.FileHeader, userUid string, projectUid string) (entity.Document, error) {
 	newFileName := fileHeader.Filename
 	path := fmt.Sprintf("./storage/%s", newFileName)
+	ctx := context.Background()
 
 	file, err := fileHeader.Open()
 	if err != nil {
-		return err
+		return entity.Document{}, err
 	}
 	buf := bytes.NewBuffer(nil)
 	if _, err := io.Copy(buf, file); err != nil {
-		return err
+		return entity.Document{}, err
 	}
 
 	err = uc.storageGw.SaveDocument(path, buf.Bytes())
 	if err != nil {
-		return err
+		return entity.Document{}, err
 	}
 
 	err = uc.storageGw.ChangeRights()
 	if err != nil {
-		return err
+		return entity.Document{}, err
 	}
 
 	PoW, err := uc.cryptoGw.GetDocumentPoW(buf.Bytes())
 	if err != nil {
-		return err
+		return entity.Document{}, err
 	}
 	hash := uc.cryptoGw.GenerateHash(buf.Bytes())
 
-	user, err := uc.userGw.GetUserByUid(context.Background(), userUid)
+	user, err := uc.userGw.GetUserByUid(ctx, userUid)
 	if err != nil {
-		return err
-	}
-	project, err := uc.ProjectGw.GetProjectByUid(context.Background(), projectUid)
-	if err != nil {
-		return err
+		return entity.Document{}, err
 	}
 
-	documentId, err := uc.documentGw.CreateDocument(context.Background(), newFileName, path, user.Id, project.Id)
+	project, err := uc.ProjectGw.GetProjectByUid(ctx, projectUid)
 	if err != nil {
-		return err
+		return entity.Document{}, err
 	}
 
-	docHistoryId, err := uc.documentGw.AddDocumentHistory(context.Background(), documentId, hash, PoW, user.Id)
+	documentId, err := uc.documentGw.CreateDocument(ctx, newFileName, path, user.Id, project.Id)
 	if err != nil {
-		return err
+		return entity.Document{}, err
+	}
+
+	document, err := uc.documentGw.GetDocumentById(ctx, documentId)
+	if err != nil {
+		return entity.Document{}, err
+	}
+
+	docHistoryId, err := uc.documentGw.AddDocumentHistory(ctx, documentId, hash, PoW, user.Id)
+	if err != nil {
+		return entity.Document{}, err
 	}
 	uc.logger.Debug(docHistoryId)
 
 	byteContainer, err := ioutil.ReadAll(file) // why the long names though?
 	uc.logger.Debug("size:%d", len(byteContainer))
-	return nil
+	return document, nil
 
 }
 
-func (uc *DocumentUseCase) UpdateDocument(fileHeader *multipart.FileHeader, userUid string, documentUid string) error {
+func (uc *DocumentUseCase) UpdateDocument(fileHeader *multipart.FileHeader, userUid string, documentUid string, version string) error {
 	document, err := uc.documentGw.GetDocumentByUid(context.Background(), documentUid)
 	if err != nil {
 		return err
 	}
-
-	path := fmt.Sprintf("./storage/%s-v%v", document.Name, increment())
+	nameExtention := strings.Split(document.Name, ".")
+	path := fmt.Sprintf("./storage/%s-v%v.%s", nameExtention[0], version, nameExtention[1])
 
 	file, err := fileHeader.Open()
 	if err != nil {

@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -12,7 +13,7 @@ import (
 	"thourus-api/gateway"
 )
 
-func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn *sql.DB, natsConn *nats.Conn, cfg *config.Config) (*gin.Engine, error) {
+func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn *sql.DB, natsConn *nats.Conn, redisConn *redis.Client, cfg *config.Config) (*gin.Engine, error) {
 
 	server := gin.Default()
 
@@ -25,6 +26,7 @@ func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn 
 	documentGw := gateway.NewDocumentGateway(dbConn)
 	userGw := gateway.NewUserGateway(dbConn)
 	mailGw := gateway.NewMailGateway(natsConn)
+	cacheGw := gateway.NewCacheGateway(redisConn)
 	cryptoGw := gateway.NewCryptoGateway(cfg.Crypto.SecretString, cfg.Crypto.Rule, grpcConn)
 	storageGw := gateway.NewStorageGateway(cfg.DB.StoragePath)
 
@@ -33,16 +35,17 @@ func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn 
 	userUc := usecase.NewUserUseCase(userGw, appLogger)
 	spaceUc := usecase.NewSpaceUseCase(spaceGw, projectGw, documentGw, appLogger)
 	projectUc := usecase.NewProjectUseCase(projectGw, documentGw, appLogger)
+	cacheUc := usecase.NewCacheUseCase(cacheGw, appLogger)
 	mailUc := usecase.NewMailUseCase(mailGw, appLogger)
 
 	apiRoute := server.Group("/api")
 	{
 		apiRoute.GET("/ping", func(ctx *gin.Context) { ctx.JSON(200, gin.H{"message": "pong"}) })
 
-		apiRoute.POST("/document/upload", func(ctx *gin.Context) { entrypoint.UploadNewDocument(documentUc, mailUc, ctx) })
+		apiRoute.POST("/document/upload", func(ctx *gin.Context) { entrypoint.UploadNewDocument(documentUc, mailUc, cacheUc, ctx) })
 		apiRoute.GET("/document/:uid/delete", func(ctx *gin.Context) { entrypoint.DeleteDocument(documentUc, ctx) })
 		apiRoute.GET("/document/:uid/download", func(ctx *gin.Context) { entrypoint.DownloadDocument(documentUc, ctx) })
-		apiRoute.POST("/document/:uid/update", func(ctx *gin.Context) { entrypoint.UpdateDocument(documentUc, mailUc, ctx) })
+		apiRoute.POST("/document/:uid/update", func(ctx *gin.Context) { entrypoint.UpdateDocument(documentUc, mailUc, cacheUc, ctx) })
 
 		apiRoute.GET("/space/:uid/delete", func(ctx *gin.Context) { entrypoint.DeleteSpace(spaceUc, ctx) })
 		apiRoute.GET("/space/add", func(ctx *gin.Context) { entrypoint.AddSpace(spaceUc, companyUc, ctx) })
@@ -61,7 +64,7 @@ func InitServer(appLogger *zap.SugaredLogger, grpcConn *grpc.ClientConn, dbConn 
 		viewRoute.GET("/project/:uid", func(ctx *gin.Context) { entrypoint.GetDocumentsInProject(projectUc, ctx) })
 		viewRoute.GET("/document/add", func(ctx *gin.Context) { entrypoint.AddDocument(ctx) })
 		viewRoute.GET("/document/update", func(ctx *gin.Context) { entrypoint.UpdateDocumentView(ctx) })
-		viewRoute.GET("/document/:uid/history", func(ctx *gin.Context) { entrypoint.ShowHistory(documentUc, ctx) })
+		viewRoute.GET("/document/:uid/history", func(ctx *gin.Context) { entrypoint.ShowHistory(documentUc, cacheUc, ctx) })
 	}
 
 	go func() {

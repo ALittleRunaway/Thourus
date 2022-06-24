@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -12,12 +13,13 @@ import (
 )
 
 type InterruptParams struct {
-	Logger   *zap.SugaredLogger
-	Shutdown <-chan error
-	GrpcConn *grpc.ClientConn
-	DBConn   *sql.DB
-	NatsConn *nats.Conn
-	Server   *gin.Engine
+	Logger    *zap.SugaredLogger
+	Shutdown  <-chan error
+	GrpcConn  *grpc.ClientConn
+	DBConn    *sql.DB
+	NatsConn  *nats.Conn
+	RedisConn *redis.Client
+	Server    *gin.Engine
 }
 
 func Interrupter(params InterruptParams) {
@@ -52,6 +54,12 @@ func Interrupter(params InterruptParams) {
 			params.NatsConn.Drain()
 			params.NatsConn.Close()
 		}
+		params.Logger.Info("Nats connection is closed.")
+	}
+
+	// stopping the Redis connection
+	if params.RedisConn != nil {
+		params.RedisConn.Close()
 		params.Logger.Info("Nats connection is closed.")
 	}
 

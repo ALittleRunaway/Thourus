@@ -21,6 +21,7 @@ import (
 	"thourus-api/infrastructure/grpc"
 	"thourus-api/infrastructure/log"
 	"thourus-api/infrastructure/nats"
+	"thourus-api/infrastructure/redis"
 )
 
 func main() {
@@ -57,8 +58,15 @@ func main() {
 		fatalErrCh <- err
 	}
 
+	// Establishing the Redis connection
+	RedisConn, err := redis.NewRedisConnection(cfg.Redis, appLogger)
+	if err != nil {
+		appLogger.Error("The app could not establish the Redis connection. Exiting")
+		fatalErrCh <- err
+	}
+
 	// Starting the server
-	server, err := InitServer(appLogger, grpcConn, DBConn, NatsConn, cfg)
+	server, err := InitServer(appLogger, grpcConn, DBConn, NatsConn, RedisConn, cfg)
 	if err != nil {
 		appLogger.Error("The app could not start the server. Exiting")
 		fatalErrCh <- err
@@ -67,12 +75,13 @@ func main() {
 	appLogger.Info("The app has started")
 
 	params := infrastructure.InterruptParams{
-		Logger:   appLogger,
-		Shutdown: fatalErrCh,
-		GrpcConn: grpcConn,
-		DBConn:   DBConn,
-		NatsConn: NatsConn,
-		Server:   server,
+		Logger:    appLogger,
+		Shutdown:  fatalErrCh,
+		GrpcConn:  grpcConn,
+		DBConn:    DBConn,
+		NatsConn:  NatsConn,
+		RedisConn: RedisConn,
+		Server:    server,
 	}
 	infrastructure.Interrupter(params)
 
